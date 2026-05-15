@@ -3,1215 +3,1062 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<!-- CSP: разрешаем только telegram.org и fonts.googleapis.com как внешние источники -->
-<meta http-equiv="Content-Security-Policy" content="
-  default-src 'self';
-  script-src 'self' 'unsafe-inline' https://telegram.org;
-  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-  font-src https://fonts.gstatic.com;
-  img-src 'self' data:;
-  connect-src 'none';
-  frame-ancestors 'self' https://web.telegram.org https://*.telegram.org;
-">
 <title>Decision</title>
-<!-- Telegram Mini App SDK — официальный источник, обязателен для работы в Telegram -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0d0d0d;
-    --surface: #141414;
-    --surface-2: #1c1c1c;
-    --border: #2a2a2a;
-    --border-active: #404040;
-    --text: #e8e8e8;
-    --text-dim: #666;
-    --text-muted: #3a3a3a;
-    --accent: #e8e8e8;
-    --green: #4ade80;
-    --yellow: #fbbf24;
-    --red: #f87171;
-    --blue: #60a5fa;
-    --mono: 'IBM Plex Mono', monospace;
-    --sans: 'IBM Plex Sans', sans-serif;
-  }
+:root {
+  --bg:     #0c0c0e;
+  --surf:   #131316;
+  --surf2:  #1a1a1f;
+  --surf3:  #202027;
+  --brd:    #252529;
+  --brd2:   #3a3a42;
+  --txt:    #f0f0f2;
+  --dim:    #7a7a85;
+  --muted:  #35353d;
+  --green:  #3dd68c;
+  --yellow: #f5c542;
+  --red:    #f56565;
+  --blue:   #5b9cf6;
+  --mono:   'IBM Plex Mono', monospace;
+  --sans:   'Manrope', sans-serif;
+  --r:      10px;
+  --r-sm:   6px;
+}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html, body {
+  background: var(--bg);
+  color: var(--txt);
+  font-family: var(--sans);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
 
-  html, body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--mono);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+/* ─── Screens ─── */
+.screen { display: none; flex-direction: column; min-height: 100vh; }
+.screen.active { display: flex; }
 
-  /* ── Layout ── */
-  #app {
-    max-width: 480px;
-    margin: 0 auto;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
+/* ─── INTRO ─── */
+.intro-wrap {
+  padding: 48px 24px 36px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+  min-height: 100vh;
+}
+.i-logo {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .3em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 36px;
+}
+.i-eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .2em;
+  color: var(--dim);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.i-title {
+  font-size: 30px;
+  font-weight: 300;
+  line-height: 1.3;
+  color: var(--txt);
+  letter-spacing: -.03em;
+  margin-bottom: 16px;
+}
+.i-title strong { font-weight: 700; }
+.i-sub {
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--dim);
+  line-height: 1.65;
+}
+.i-divider {
+  height: 1px;
+  background: var(--brd);
+  margin: 28px 0;
+}
+.h-title {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .25em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.h-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  background: var(--surf);
+  border: 1px solid var(--brd);
+  border-radius: var(--r-sm);
+  margin-bottom: 6px;
+}
+.h-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.h-dot.do-now { background: var(--green); }
+.h-dot.plan   { background: var(--yellow); }
+.h-dot.noise  { background: var(--red); }
+.h-dot.pause  { background: var(--blue); }
+.h-text {
+  font-size: 13px;
+  color: var(--dim);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 400;
+}
+.h-date {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.intro-bottom { margin-top: 32px; }
 
-  /* ── Header ── */
-  .header {
-    padding: 20px 20px 0;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    opacity: 0;
-    animation: fadeUp 0.4s ease 0.1s forwards;
-  }
-  .header-logo {
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.2em;
-    color: var(--text-dim);
-    text-transform: uppercase;
-  }
-  .header-step {
-    font-size: 11px;
-    color: var(--text-muted);
-    letter-spacing: 0.05em;
-  }
+/* ─── FLOW: Header ─── */
+.hdr {
+  padding: 18px 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.hdr-logo {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .25em;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.hdr-step {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+}
 
-  /* ── Progress bar ── */
-  .progress-track {
-    margin: 16px 20px 0;
-    height: 2px;
-    background: var(--surface-2);
-    border-radius: 1px;
-    overflow: hidden;
-    opacity: 0;
-    animation: fadeUp 0.4s ease 0.15s forwards;
-  }
-  .progress-fill {
-    height: 100%;
-    background: var(--text-dim);
-    border-radius: 1px;
-    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  }
+/* ─── Progress ─── */
+.prog {
+  margin: 14px 20px 0;
+  height: 3px;
+  background: var(--surf3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.prog-fill {
+  height: 100%;
+  background: var(--dim);
+  border-radius: 2px;
+  transition: width .4s cubic-bezier(.4,0,.2,1);
+}
 
-  /* ── Main content ── */
-  .content {
-    flex: 1;
-    padding: 32px 20px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-  }
+/* ─── Step content ─── */
+.content {
+  flex: 1;
+  padding: 28px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+#step-content { transition: opacity .22s ease, transform .22s ease; }
 
-  /* ── Question block ── */
-  .question-block {
-    opacity: 0;
-    animation: fadeUp 0.35s ease 0.2s forwards;
-  }
-  .question-label {
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    margin-bottom: 12px;
-    font-weight: 500;
-  }
-  .question-text {
-    font-family: var(--sans);
-    font-size: 20px;
-    font-weight: 400;
-    line-height: 1.4;
-    color: var(--text);
-    letter-spacing: -0.01em;
-  }
-  .question-sub {
-    margin-top: 8px;
-    font-size: 13px;
-    color: var(--text-dim);
-    font-family: var(--sans);
-    line-height: 1.5;
-  }
+/* ─── Question ─── */
+.q-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .25em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+.q-text {
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--txt);
+  letter-spacing: -.02em;
+}
+.q-sub {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--dim);
+  line-height: 1.6;
+  font-weight: 400;
+}
 
-  /* ── Thought display ── */
-  .thought-display {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--border-active);
-    padding: 14px 16px;
-    border-radius: 4px;
-    font-family: var(--sans);
-    font-size: 14px;
-    color: var(--text-dim);
-    line-height: 1.5;
-    font-style: italic;
-    opacity: 0;
-    animation: fadeUp 0.35s ease 0.25s forwards;
-  }
+/* ─── Thought display ─── */
+.t-disp {
+  background: var(--surf);
+  border: 1px solid var(--brd);
+  border-left: 3px solid var(--brd2);
+  padding: 12px 16px;
+  border-radius: var(--r-sm);
+  font-size: 13px;
+  color: var(--dim);
+  line-height: 1.55;
+  font-style: italic;
+  font-weight: 400;
+}
 
-  /* ── Textarea ── */
-  .textarea-wrap {
-    opacity: 0;
-    animation: fadeUp 0.35s ease 0.25s forwards;
-  }
-  textarea {
-    width: 100%;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 16px;
-    line-height: 1.6;
-    padding: 16px;
-    resize: none;
-    outline: none;
-    min-height: 120px;
-    transition: border-color 0.2s;
-    -webkit-appearance: none;
-  }
-  textarea:focus { border-color: var(--border-active); }
-  textarea::placeholder { color: var(--text-muted); }
-  .textarea-hint {
-    margin-top: 8px;
-    font-size: 11px;
-    color: var(--text-muted);
-    letter-spacing: 0.05em;
-  }
+/* ─── Textarea ─── */
+textarea {
+  width: 100%;
+  background: var(--surf);
+  border: 1px solid var(--brd);
+  border-radius: var(--r-sm);
+  color: var(--txt);
+  font-family: var(--sans);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.65;
+  padding: 16px;
+  resize: none;
+  outline: none;
+  min-height: 120px;
+  transition: border-color .2s;
+  -webkit-appearance: none;
+  display: block;
+}
+textarea:focus { border-color: var(--brd2); }
+textarea::placeholder { color: var(--muted); }
+.ta-hint {
+  margin-top: 7px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: .05em;
+}
 
-  /* ── Options ── */
-  .options {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    opacity: 0;
-    animation: fadeUp 0.35s ease 0.3s forwards;
-  }
+/* ─── Options ─── */
+.opts { display: flex; flex-direction: column; gap: 8px; }
+.opt {
+  background: var(--surf);
+  border: 1px solid var(--brd);
+  border-left: 3px solid transparent;
+  border-radius: var(--r-sm);
+  padding: 15px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+  transition: border-color .15s, background .15s, border-left-color .15s;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.opt:active { background: var(--surf2); }
+.opt.sel {
+  border-color: var(--brd2);
+  border-left-color: var(--txt);
+  background: var(--surf2);
+}
+.opt-ico {
+  font-size: 16px;
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+  line-height: 1;
+}
+.opt-body { flex: 1; }
+.opt-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--txt);
+  line-height: 1.3;
+}
+.opt-desc {
+  font-size: 12px;
+  color: var(--dim);
+  margin-top: 3px;
+  line-height: 1.4;
+  font-weight: 400;
+}
+/* Radio — hidden, selection shown via left border */
+.opt-radio {
+  width: 18px; height: 18px;
+  border: 1px solid var(--brd);
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .15s;
+  background: transparent;
+}
+.opt.sel .opt-radio {
+  background: var(--txt);
+  border-color: var(--txt);
+}
+.opt.sel .opt-radio::after {
+  content: '';
+  width: 6px; height: 6px;
+  background: var(--bg);
+  border-radius: 50%;
+  display: block;
+}
 
-  .option {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 14px 16px;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s, transform 0.1s;
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    -webkit-user-select: none;
-    user-select: none;
-    text-align: left;
-    width: 100%;
-    font-family: inherit;
-  }
-  .option:active { transform: scale(0.985); background: var(--surface-2); }
-  .option.selected {
-    border-color: var(--border-active);
-    background: var(--surface-2);
-  }
-  .option-icon {
-    font-size: 16px;
-    flex-shrink: 0;
-    margin-top: 1px;
-    width: 20px;
-    text-align: center;
-  }
-  .option-body { flex: 1; }
-  .option-title {
-    font-family: var(--sans);
-    font-size: 14px;
-    font-weight: 500;
-    color: var(--text);
-    line-height: 1.3;
-  }
-  .option-desc {
-    font-family: var(--sans);
-    font-size: 12px;
-    color: var(--text-dim);
-    margin-top: 3px;
-    line-height: 1.4;
-  }
-  .option-check {
-    width: 18px;
-    height: 18px;
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    flex-shrink: 0;
-    margin-top: 2px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s;
-  }
-  .option.selected .option-check {
-    background: var(--text);
-    border-color: var(--text);
-  }
-  .option.selected .option-check::after {
-    content: '';
-    width: 6px;
-    height: 6px;
-    background: var(--bg);
-    border-radius: 50%;
-  }
+/* ─── Grid (source) ─── */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.g-opt {
+  background: var(--surf);
+  border: 1px solid var(--brd);
+  border-radius: var(--r-sm);
+  padding: 16px 14px 14px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+  transition: border-color .15s, background .15s;
+  -webkit-user-select: none;
+  user-select: none;
+  display: block;
+  position: relative;
+}
+.g-opt:active { background: var(--surf2); }
+.g-opt.sel {
+  border-color: var(--txt);
+  background: var(--surf2);
+}
+.g-opt.sel::after {
+  content: '';
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--txt);
+}
+.g-ico {
+  font-size: 22px;
+  display: block;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+.g-title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--txt);
+  line-height: 1.35;
+}
 
-  /* Prevent child elements from swallowing clicks on buttons */
-  .option > *, .option-grid-item > * { pointer-events: none; }
+/* ─── Warnings ─── */
+.warn {
+  border-radius: var(--r-sm);
+  padding: 11px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 400;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.warn-y { background: #16110a; border: 1px solid #3d2e00; color: #d4a017; }
+.warn-b { background: #0a0e18; border: 1px solid #1a2a4d; color: #6b9cf0; }
 
-  /* ── Grid options (for source) ── */
-  .options-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    opacity: 0;
-    animation: fadeUp 0.35s ease 0.3s forwards;
-  }
-  .option-grid-item {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 12px 14px;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s, transform 0.1s;
-    -webkit-user-select: none;
-    user-select: none;
-    text-align: left;
-    width: 100%;
-    font-family: inherit;
-  }
-  .option-grid-item:active { transform: scale(0.97); }
-  .option-grid-item.selected { border-color: var(--border-active); background: var(--surface-2); }
-  .option-grid-icon { font-size: 18px; display: block; margin-bottom: 6px; }
-  .option-grid-title {
-    font-family: var(--sans);
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text);
-    line-height: 1.3;
-  }
+/* ─── Primary button ─── */
+.btn {
+  width: 100%;
+  background: var(--txt);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--r-sm);
+  padding: 17px;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity .15s, transform .1s;
+  -webkit-user-select: none;
+  user-select: none;
+  display: block;
+}
+.btn:disabled { opacity: .2; cursor: not-allowed; }
+.btn:not(:disabled):active { transform: scale(.98); opacity: .88; }
 
-  /* ── Primary button ── */
-  .btn-primary {
-    width: 100%;
-    background: var(--text);
-    color: var(--bg);
-    border: none;
-    border-radius: 4px;
-    padding: 16px;
-    font-family: var(--mono);
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: opacity 0.15s, transform 0.1s;
-    -webkit-user-select: none;
-    user-select: none;
-    opacity: 0;
-    animation: fadeUp 0.35s ease 0.4s forwards;
-  }
-  .btn-primary:disabled { opacity: 0.25; cursor: not-allowed; }
-  .btn-primary:not(:disabled):active { transform: scale(0.98); opacity: 0.9; }
+/* ─── Outline button ─── */
+.btn-out {
+  width: 100%;
+  background: transparent;
+  color: var(--dim);
+  border: 1px solid var(--brd);
+  border-radius: var(--r-sm);
+  padding: 15px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+  -webkit-user-select: none;
+  user-select: none;
+  display: block;
+}
+.btn-out:active { border-color: var(--brd2); color: var(--txt); }
 
-  /* ── Warning banner ── */
-  .warning {
-    background: #1a1400;
-    border: 1px solid #3d2e00;
-    border-radius: 4px;
-    padding: 12px 14px;
-    font-family: var(--sans);
-    font-size: 13px;
-    color: var(--yellow);
-    line-height: 1.5;
-    opacity: 0;
-    animation: fadeUp 0.35s ease 0.28s forwards;
-  }
-  .warning-icon { margin-right: 6px; }
+/* ─── VERDICT ─── */
+.v-wrap {
+  padding: 28px 20px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex: 1;
+}
+.v-t-lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .25em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.v-t-txt {
+  font-size: 14px;
+  color: var(--dim);
+  font-style: italic;
+  line-height: 1.55;
+  padding-left: 14px;
+  border-left: 2px solid var(--brd);
+  font-weight: 400;
+}
 
-  /* ── Verdict screen ── */
-  .verdict-screen {
-    padding: 32px 20px 24px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    min-height: 100vh;
-  }
+/* Verdict card */
+.v-card {
+  background: var(--surf);
+  border: 1px solid var(--brd);
+  border-radius: var(--r);
+  padding: 22px;
+}
+.v-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 4px;
+  margin-bottom: 18px;
+}
+.v-badge.do-now { background: #081a0a; color: var(--green); border: 1px solid #1a3d1a; }
+.v-badge.plan   { background: #181200; color: var(--yellow); border: 1px solid #3d2e00; }
+.v-badge.noise  { background: #1a0808; color: var(--red);    border: 1px solid #3d1a1a; }
+.v-badge.pause  { background: #080e1a; color: var(--blue);   border: 1px solid #1a2a4d; }
 
-  .verdict-header {
-    opacity: 0;
-    animation: fadeUp 0.4s ease 0.05s forwards;
-  }
-  .verdict-label {
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-  .verdict-thought {
-    font-family: var(--sans);
-    font-size: 14px;
-    color: var(--text-dim);
-    font-style: italic;
-    line-height: 1.5;
-    padding-left: 12px;
-    border-left: 2px solid var(--border);
-  }
+.v-srow { display: flex; align-items: center; gap: 18px; margin-bottom: 18px; }
+.v-ring { position: relative; width: 68px; height: 68px; flex-shrink: 0; }
+.v-ring-num {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 600;
+}
+.v-sinfo { flex: 1; }
+.v-sinfo-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--dim);
+  margin-bottom: 3px;
+}
+.v-sinfo-sub {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+}
+.v-main {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--txt);
+  margin-bottom: 20px;
+  letter-spacing: -.025em;
+}
+.v-nl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .2em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--brd);
+}
+.v-nt {
+  font-size: 15px;
+  color: var(--txt);
+  line-height: 1.55;
+  font-weight: 400;
+}
 
-  .verdict-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 24px 20px;
-    opacity: 0;
-    animation: fadeUp 0.4s ease 0.15s forwards;
-  }
-  .verdict-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 11px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    font-weight: 600;
-    padding: 5px 10px;
-    border-radius: 3px;
-    margin-bottom: 16px;
-  }
-  .verdict-badge.do-now { background: #0a1f0a; color: var(--green); border: 1px solid #1a3d1a; }
-  .verdict-badge.plan { background: #1a1400; color: var(--yellow); border: 1px solid #3d2e00; }
-  .verdict-badge.noise { background: #1a0a0a; color: var(--red); border: 1px solid #3d1a1a; }
-  .verdict-badge.pause { background: #0a0f1f; color: var(--blue); border: 1px solid #1a2a4d; }
+/* Breakdown */
+.bd-title {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .2em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.br-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.br-name {
+  font-size: 12px;
+  color: var(--dim);
+  width: 105px;
+  flex-shrink: 0;
+  font-weight: 400;
+}
+.br-track {
+  flex: 1;
+  height: 4px;
+  background: var(--surf3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.br-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--dim);
+}
+.br-val {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  width: 30px;
+  text-align: right;
+}
 
-  .verdict-main {
-    font-family: var(--sans);
-    font-size: 22px;
-    font-weight: 400;
-    line-height: 1.3;
-    color: var(--text);
-    margin-bottom: 20px;
-    letter-spacing: -0.02em;
-  }
+/* Factors */
+.f-row {
+  font-size: 12px;
+  color: var(--dim);
+  display: flex;
+  gap: 8px;
+  line-height: 1.45;
+  margin-top: 6px;
+  font-weight: 400;
+}
+.f-dash { color: var(--muted); flex-shrink: 0; }
 
-  .verdict-next {
-    border-top: 1px solid var(--border);
-    padding-top: 16px;
-  }
-  .verdict-next-label {
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  .verdict-next-text {
-    font-family: var(--sans);
-    font-size: 15px;
-    color: var(--text);
-    line-height: 1.5;
-  }
-
-  /* ── Score breakdown ── */
-  .breakdown {
-    opacity: 0;
-    animation: fadeUp 0.4s ease 0.25s forwards;
-  }
-  .breakdown-title {
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    margin-bottom: 12px;
-  }
-  .breakdown-rows { display: flex; flex-direction: column; gap: 10px; }
-  .breakdown-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .breakdown-name {
-    font-family: var(--sans);
-    font-size: 12px;
-    color: var(--text-dim);
-    width: 120px;
-    flex-shrink: 0;
-  }
-  .breakdown-bar-track {
-    flex: 1;
-    height: 4px;
-    background: var(--surface-2);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  .breakdown-bar-fill {
-    height: 100%;
-    border-radius: 2px;
-    background: var(--text-dim);
-    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .breakdown-val {
-    font-size: 11px;
-    color: var(--text-muted);
-    width: 28px;
-    text-align: right;
-  }
-
-  .factors {
-    margin-top: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .factor {
-    font-family: var(--sans);
-    font-size: 12px;
-    color: var(--text-dim);
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    line-height: 1.4;
-  }
-  .factor-dot { color: var(--text-muted); flex-shrink: 0; margin-top: 1px; }
-
-  /* ── Verdict actions ── */
-  .verdict-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    opacity: 0;
-    animation: fadeUp 0.4s ease 0.35s forwards;
-    padding-bottom: 24px;
-  }
-  .btn-outline {
-    width: 100%;
-    background: transparent;
-    color: var(--text-dim);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 14px;
-    font-family: var(--mono);
-    font-size: 12px;
-    font-weight: 500;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: border-color 0.15s, color 0.15s, transform 0.1s;
-    -webkit-user-select: none;
-    user-select: none;
-  }
-  .btn-outline:active { transform: scale(0.98); border-color: var(--border-active); color: var(--text); }
-
-  /* ── History ── */
-  .history-section {
-    opacity: 0;
-    animation: fadeUp 0.4s ease 0.3s forwards;
-  }
-  .history-title {
-    font-size: 10px;
-    letter-spacing: 0.2em;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-  .history-list { display: flex; flex-direction: column; gap: 6px; }
-  .history-item {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 10px 14px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .history-verdict-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .history-verdict-dot.do-now { background: var(--green); }
-  .history-verdict-dot.plan { background: var(--yellow); }
-  .history-verdict-dot.noise { background: var(--red); }
-  .history-verdict-dot.pause { background: var(--blue); }
-  .history-thought {
-    font-family: var(--sans);
-    font-size: 12px;
-    color: var(--text-dim);
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .history-date {
-    font-size: 10px;
-    color: var(--text-muted);
-    flex-shrink: 0;
-  }
-
-  /* ── Screen transitions ── */
-  .screen { display: none; }
-  .screen.active { display: flex; flex-direction: column; }
-
-  /* ── Animations ── */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .screen-enter { animation: fadeUp 0.3s ease forwards; }
-
-  /* ── Score ring (verdict) ── */
-  .score-ring-wrap {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 4px;
-  }
-  .score-ring {
-    position: relative;
-    width: 56px;
-    height: 56px;
-    flex-shrink: 0;
-  }
-  .score-ring svg { transform: rotate(-90deg); }
-  .score-ring-num {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text);
-  }
-  .score-ring-label {
-    font-family: var(--sans);
-    font-size: 13px;
-    color: var(--text-dim);
-    line-height: 1.4;
-  }
+.v-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
 </style>
 </head>
 <body>
-<div id="app">
 
-  <!-- ══════════════════════════════════════════════
-       SCREEN: INTRO
-  ══════════════════════════════════════════════ -->
-  <div id="screen-intro" class="screen active" style="flex-direction:column; min-height:100vh; justify-content:space-between; padding: 40px 20px 32px;">
+<div id="screen-intro" class="screen active">
+  <div class="intro-wrap">
     <div>
-      <div style="opacity:0;animation:fadeUp 0.4s ease 0.1s forwards;">
-        <div style="font-size:10px;letter-spacing:0.25em;color:var(--text-muted);text-transform:uppercase;margin-bottom:32px;">Decision</div>
-        <div style="font-family:var(--sans);font-size:28px;font-weight:300;line-height:1.3;color:var(--text);letter-spacing:-0.02em;">
-          Убирает шум.<br>Оставляет решение.
-        </div>
-        <div style="margin-top:16px;font-family:var(--sans);font-size:15px;color:var(--text-dim);line-height:1.6;">
-          Есть мысль о бизнесе — переделать лендинг, нанять человека, сменить канал? Прогони через инструмент. Получи вердикт за 3 минуты.
-        </div>
-      </div>
-
-      <div id="history-intro" class="history-section" style="margin-top:36px;display:none;">
-        <div class="history-title">Последние решения</div>
-        <div class="history-list" id="history-list-intro"></div>
+      <div class="i-logo">Decision</div>
+      <div class="i-eyebrow">Инструмент предпринимателя</div>
+      <div class="i-title"><strong>Убирает шум.</strong><br>Оставляет решение.</div>
+      <div class="i-sub">Мысль о бизнесе крутится в голове? Прогони через инструмент — получи вердикт за 3 минуты.</div>
+      <div id="hist-block" style="display:none">
+        <div class="i-divider"></div>
+        <div class="h-title">Последние решения</div>
+        <div id="hist-list"></div>
       </div>
     </div>
-
-    <div style="opacity:0;animation:fadeUp 0.4s ease 0.3s forwards;">
-      <button class="btn-primary" style="opacity:1;animation:none;" onclick="startNew()">
-        → Новая мысль
-      </button>
+    <div class="intro-bottom">
+      <button class="btn" id="intro-btn">Разобрать мысль →</button>
     </div>
   </div>
+</div>
 
-  <!-- ══════════════════════════════════════════════
-       SCREEN: FLOW (steps 1–9)
-  ══════════════════════════════════════════════ -->
-  <div id="screen-flow" class="screen">
-    <div id="app-inner" style="display:flex;flex-direction:column;min-height:100vh;">
-
-      <div class="header">
-        <div class="header-logo">Decision</div>
-        <div class="header-step" id="step-counter">шаг 1 / 9</div>
-      </div>
-
-      <div class="progress-track">
-        <div class="progress-fill" id="progress-fill" style="width:11%"></div>
-      </div>
-
-      <div class="content" id="step-content"></div>
-
-    </div>
+<div id="screen-flow" class="screen">
+  <div class="hdr">
+    <div class="hdr-logo">Decision</div>
+    <div id="step-counter" class="hdr-step">1 / 10</div>
   </div>
+  <div class="prog"><div class="prog-fill" id="prog-fill" style="width:10%"></div></div>
+  <div class="content" id="step-content"></div>
+</div>
 
-  <!-- ══════════════════════════════════════════════
-       SCREEN: VERDICT
-  ══════════════════════════════════════════════ -->
-  <div id="screen-verdict" class="screen">
-    <div class="verdict-screen" id="verdict-content"></div>
-  </div>
-
+<div id="screen-verdict" class="screen">
+  <div class="v-wrap" id="verd-content"></div>
 </div>
 
 <script>
-// ════════════════════════════════════════════════════════
-// TELEGRAM MINI APP INIT
-// ════════════════════════════════════════════════════════
-const tg = window.Telegram?.WebApp;
-if (tg) {
-  tg.ready();
-  tg.expand();
+(function() {
+
+var tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
+if (tg) { tg.ready(); tg.expand(); }
+
+var SQ = { data:2, client:2, recurring:2, competitor:1, intuition:0, media:0 };
+
+var S = {};
+function reset() {
+  S = { thought:'', emotion:null, readiness:null, level:null, source:null,
+        signal:null, deterioration:null, costIn:null, costOut:null, reversibility:null };
 }
+reset();
 
-// ════════════════════════════════════════════════════════
-// STATE
-// ════════════════════════════════════════════════════════
-const SOURCE_QUALITY = {
-  data: 2, client: 2, recurring: 2,
-  competitor: 1, intuition: 0, media: 0
+var step = 0;
+
+var STEPS = ['thought','emotion','readiness','level','source','signal','deterioration','costIn','costOut','reversibility'];
+var TYPES = { thought:'ta', emotion:'opts', readiness:'opts', level:'opts', source:'grid',
+              signal:'opts', deterioration:'opts', costIn:'opts', costOut:'opts', reversibility:'opts' };
+var LABELS = { thought:'Мысль', emotion:'Состояние', readiness:'Готовность', level:'Уровень',
+               source:'Источник', signal:'Сигнал', deterioration:'Динамика',
+               costIn:'Цена входа', costOut:'Цена бездействия', reversibility:'Обратимость' };
+var QS = {
+  thought:'Что тебя зацепило?',
+  emotion:'Как ты сейчас?',
+  readiness:'Ты бы сейчас подписал договор на крупную сумму?',
+  level:'На каком уровне эта мысль?',
+  source:'Откуда эта мысль?',
+  signal:'Есть подтверждения, что это реальная проблема?',
+  deterioration:'Если не делать — станет хуже?',
+  costIn:'Цена внедрения — деньги, время, фокус?',
+  costOut:'Что теряешь, если не делать?',
+  reversibility:'Если сделать и ошибиться — можно откатить?'
+};
+var QSUB = { thought:'Одним-двумя предложениями. Не что хочешь сделать — а что беспокоит или не даёт покоя.' };
+
+var OPTS = {
+  emotion:[
+    {val:0,ico:'●',color:'#3dd68c',title:'Спокойно',desc:'Думаю трезво, без давления'},
+    {val:1,ico:'●',color:'#f5c542',title:'Есть лёгкое возбуждение',desc:'Немного заряжен, но контролирую'},
+    {val:2,ico:'●',color:'#f56565',title:'Сильно заряжен',desc:'Злость, эйфория или тревога'}
+  ],
+  readiness:[
+    {val:2,ico:'✓',color:'#3dd68c',title:'Да, без сомнений',desc:''},
+    {val:1,ico:'~',color:'#f5c542',title:'Наверное да, с оговорками',desc:''},
+    {val:0,ico:'✗',color:'#f56565',title:'Нет, подождал бы',desc:''}
+  ],
+  level:[
+    {val:0,ico:'○',color:'',title:'Операционный',desc:'Задача, процесс, исполнение'},
+    {val:1,ico:'◑',color:'',title:'Тактический',desc:'Направление, канал, продукт'},
+    {val:2,ico:'●',color:'',title:'Стратегический',desc:'Позиционирование, модель, структура'}
+  ],
+  signal:[
+    {val:2,ico:'✓',color:'#3dd68c',title:'Да',desc:'Факты, цифры, несколько случаев'},
+    {val:1,ico:'~',color:'#f5c542',title:'Частично',desc:'Что-то есть, но слабо'},
+    {val:0,ico:'✗',color:'#f56565',title:'Нет',desc:'Пока только ощущение'}
+  ],
+  deterioration:[
+    {val:2,ico:'↑',color:'#f56565',title:'Да, нарастает',desc:''},
+    {val:1,ico:'→',color:'#7a7a85',title:'Останется как есть',desc:''},
+    {val:0,ico:'↓',color:'#3dd68c',title:'Скорее нет',desc:''}
+  ],
+  costIn:[
+    {val:0,ico:'●',color:'#3dd68c',title:'Низкая',desc:'Быстро, дёшево, не отвлекает команду'},
+    {val:1,ico:'●',color:'#f5c542',title:'Средняя',desc:'Требует усилий, но подъёмно'},
+    {val:2,ico:'●',color:'#f56565',title:'Высокая',desc:'Дорого, долго, нагрузит команду'}
+  ],
+  costOut:[
+    {val:2,ico:'●',color:'#f56565',title:'Высокая',desc:'Деньги, клиенты, возможности уходят'},
+    {val:1,ico:'●',color:'#f5c542',title:'Средняя',desc:'Есть потери, но терпимо'},
+    {val:0,ico:'●',color:'#3dd68c',title:'Низкая',desc:'Ничего страшного не случится'}
+  ],
+  reversibility:[
+    {val:2,ico:'✓',color:'#3dd68c',title:'Да, легко',desc:''},
+    {val:1,ico:'~',color:'#f5c542',title:'Частично, с потерями',desc:''},
+    {val:0,ico:'✗',color:'#f56565',title:'Нет — необратимо',desc:''}
+  ]
 };
 
-let session = {
-  thought: '',
-  emotion: null,        // 0/1/2
-  readiness: null,      // 0/1/2
-  level: null,          // 0/1/2
-  source: null,         // string
-  signal: null,         // 0/1/2
-  deterioration: null,  // 0/1/2
-  costIn: null,         // 0/1/2
-  costOut: null,        // 0/1/2
-  reversibility: null,  // 0/1/2
-};
-
-let currentStep = 0;
-let selectedValue = null;
-
-// ════════════════════════════════════════════════════════
-// STEPS DEFINITION
-// ════════════════════════════════════════════════════════
-const STEPS = [
-  { id: 'thought', type: 'textarea' },
-  { id: 'emotion', type: 'options' },
-  { id: 'readiness', type: 'options' },
-  { id: 'level', type: 'options' },
-  { id: 'source', type: 'grid' },
-  { id: 'signal', type: 'options' },
-  { id: 'deterioration', type: 'options' },
-  { id: 'costIn', type: 'options' },
-  { id: 'costOut', type: 'options' },
-  { id: 'reversibility', type: 'options' },
+var GRID=[
+  {val:'data',      ico:'📊', title:'Данные / метрика'},
+  {val:'client',    ico:'💬', title:'Клиент / обратная связь'},
+  {val:'recurring', ico:'🔁', title:'Повторяющаяся проблема'},
+  {val:'competitor',ico:'👀', title:'Конкурент / рынок'},
+  {val:'intuition', ico:'💡', title:'Интуиция / ощущение'},
+  {val:'media',     ico:'📰', title:'Разговор / статья / пост'}
 ];
 
-const STEP_CONFIG = {
-  thought: {
-    label: 'Мысль',
-    question: 'Что тебя зацепило?',
-    sub: 'Одним-двумя предложениями. Не что хочешь сделать — а что беспокоит или не даёт покоя.',
-  },
-  emotion: {
-    label: 'Состояние',
-    question: 'Как ты сейчас?',
-    options: [
-      { val: 0, icon: '●', color: '#4ade80', title: 'Спокойно', desc: 'Думаю трезво, без давления' },
-      { val: 1, icon: '●', color: '#fbbf24', title: 'Есть лёгкое возбуждение', desc: 'Немного заряжен, но контролирую' },
-      { val: 2, icon: '●', color: '#f87171', title: 'Сильно заряжен', desc: 'Злость, эйфория или тревога' },
-    ]
-  },
-  readiness: {
-    label: 'Готовность',
-    question: 'Ты бы сейчас подписал договор на крупную сумму?',
-    options: [
-      { val: 2, icon: '✓', title: 'Да, без сомнений', desc: '' },
-      { val: 1, icon: '~', title: 'Наверное да, с оговорками', desc: '' },
-      { val: 0, icon: '✗', title: 'Нет, подождал бы', desc: '' },
-    ]
-  },
-  level: {
-    label: 'Уровень',
-    question: 'На каком уровне эта мысль?',
-    options: [
-      { val: 0, icon: '⚙', title: 'Операционный', desc: 'Задача, процесс, исполнение' },
-      { val: 1, icon: '◎', title: 'Тактический', desc: 'Направление, канал, продукт' },
-      { val: 2, icon: '△', title: 'Стратегический', desc: 'Позиционирование, модель, структура' },
-    ]
-  },
-  source: {
-    label: 'Источник',
-    question: 'Откуда эта мысль?',
-    grid: [
-      { val: 'data', icon: '📊', title: 'Данные / метрика' },
-      { val: 'client', icon: '👤', title: 'Клиент / обратная связь' },
-      { val: 'recurring', icon: '↻', title: 'Повторяющаяся проблема' },
-      { val: 'competitor', icon: '◈', title: 'Конкурент / рынок' },
-      { val: 'intuition', icon: '◯', title: 'Интуиция / ощущение' },
-      { val: 'media', icon: '◻', title: 'Разговор / статья / пост' },
-    ]
-  },
-  signal: {
-    label: 'Сигнал',
-    question: 'Есть подтверждения, что это реальная проблема?',
-    options: [
-      { val: 2, icon: '✓', title: 'Да', desc: 'Факты, цифры, несколько случаев' },
-      { val: 1, icon: '~', title: 'Частично', desc: 'Что-то есть, но слабо' },
-      { val: 0, icon: '✗', title: 'Нет', desc: 'Пока только ощущение' },
-    ]
-  },
-  deterioration: {
-    label: 'Динамика',
-    question: 'Если не делать — станет хуже?',
-    options: [
-      { val: 2, icon: '↑', title: 'Да, проблема нарастает', desc: '' },
-      { val: 1, icon: '→', title: 'Останется как есть', desc: '' },
-      { val: 0, icon: '↓', title: 'Скорее нет', desc: '' },
-    ]
-  },
-  costIn: {
-    label: 'Цена входа',
-    question: 'Цена внедрения — деньги, время, фокус?',
-    options: [
-      { val: 0, icon: '●', color: '#4ade80', title: 'Низкая', desc: 'Быстро, дёшево, не отвлекает команду' },
-      { val: 1, icon: '●', color: '#fbbf24', title: 'Средняя', desc: 'Требует усилий, но подъёмно' },
-      { val: 2, icon: '●', color: '#f87171', title: 'Высокая', desc: 'Дорого, долго, нагрузит команду' },
-    ]
-  },
-  costOut: {
-    label: 'Цена бездействия',
-    question: 'Что теряешь, если не делать?',
-    options: [
-      { val: 2, icon: '●', color: '#f87171', title: 'Высокая потеря', desc: 'Деньги, клиенты, возможности уходят' },
-      { val: 1, icon: '●', color: '#fbbf24', title: 'Средняя', desc: 'Есть потери, но терпимо' },
-      { val: 0, icon: '●', color: '#4ade80', title: 'Низкая', desc: 'Ничего страшного не случится' },
-    ]
-  },
-  reversibility: {
-    label: 'Обратимость',
-    question: 'Если сделать и ошибиться — можно откатить?',
-    options: [
-      { val: 2, icon: '✓', title: 'Да, легко и дёшево', desc: '' },
-      { val: 1, icon: '~', title: 'Частично, с потерями', desc: '' },
-      { val: 0, icon: '✗', title: 'Нет — необратимо', desc: '' },
-    ]
-  },
-};
+function g(id) { return document.getElementById(id); }
 
-// ════════════════════════════════════════════════════════
-// SCORING
-// ════════════════════════════════════════════════════════
-function computeScore(s) {
-  const sq = (SOURCE_QUALITY[s.source] || 0) / 2.0;
-  const signalScore = (s.signal * 0.5 + sq * 2 * 0.3 + s.deterioration * 0.2) / 2.0;
-  const effortRatio = (s.costOut - s.costIn + 2) / 4.0;
-  const revFactor = s.reversibility / 2.0;
-  const actionScore = signalScore * 0.50 + effortRatio * 0.40 + revFactor * 0.10;
-
-  const levelPenalty = s.level * 0.12;
-  const emotionPenalty = [0, 0.08, 0.20][s.emotion];
-  const readinessPenalty = s.readiness === 0 ? 0.10 : 0;
-
-  const finalScore = Math.max(0, actionScore - levelPenalty - emotionPenalty - readinessPenalty);
-
-  // Special rules
-  let specialVerdict = null;
-  let specialReason = null;
-
-  if (s.emotion === 2 && s.level === 2 && s.signal <= 1) {
-    specialVerdict = 'pause';
-    specialReason = 'горячее состояние + стратегический уровень + слабый сигнал';
-  } else if (s.reversibility === 0 && s.level === 2) {
-    specialVerdict = 'plan';
-    specialReason = 'необратимое стратегическое решение';
-  }
-
-  let verdict;
-  if (specialVerdict) verdict = specialVerdict;
-  else if (finalScore >= 0.65) verdict = 'do-now';
-  else if (finalScore >= 0.35) verdict = 'plan';
-  else verdict = 'noise';
-
-  return {
-    verdict,
-    finalScore,
-    signalScore,
-    effortRatio,
-    actionScore,
-    levelPenalty,
-    emotionPenalty,
-    readinessPenalty,
-    specialReason,
-    emotionWarning: s.emotion >= 1,
-  };
+function mk(tag, cls, txt) {
+  var e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (txt !== undefined) e.textContent = txt;
+  return e;
 }
 
-function getVerdictText(verdict) {
-  return {
-    'do-now': 'Делать сейчас',
-    'plan': 'Запланировать\u00A0/ проверить гипотезой',
-    'noise': 'Отложить — скорее всего это шум',
-    'pause': 'Не принимай сейчас',
-  }[verdict];
-}
-
-function getVerdictBadge(verdict) {
-  return {
-    'do-now': '✓ Действие',
-    'plan': '◎ Гипотеза',
-    'noise': '✗ Шум',
-    'pause': '⏸ Пауза',
-  }[verdict];
-}
-
-function getNextAction(verdict, s, specialReason) {
-  if (verdict === 'pause') return 'Вернись к этому завтра — в нынешнем состоянии решение будет хуже.';
-  if (verdict === 'do-now') {
-    return ['Поставь задачу в трекер с дедлайном на эту неделю.',
-            'Запусти минимальный эксперимент за 1–2 недели.',
-            'Назначь встречу команды для согласования направления.'][s.level];
-  }
-  if (verdict === 'plan') {
-    if (specialReason && specialReason.includes('необратим')) return 'Проведи анализ рисков и получи второе мнение до действия.';
-    if (s.emotion === 2) return 'Вернись к этому завтра в спокойном состоянии.';
-    if (s.signal <= 1) return 'Собери 3 подтверждения из разных источников, потом решай.';
-    return 'Запиши как гипотезу и проверь через 2 недели с конкретным критерием.';
-  }
-  if (s.signal === 0) return 'Архивируй. Если вернётся сама — значит важна.';
-  return 'Закрой. Если вернётся сама — значит важна.';
-}
-
-// ════════════════════════════════════════════════════════
-// HISTORY (localStorage)
-// ════════════════════════════════════════════════════════
-function saveToHistory(thought, verdict, score) {
-  const history = JSON.parse(localStorage.getItem('decision_history') || '[]');
-  history.unshift({
-    thought: thought.slice(0, 80),
-    verdict,
-    score: Math.round(score * 100),
-    date: new Date().toLocaleDateString('ru', { day: 'numeric', month: 'short' }),
+function showScreen(name) {
+  ['intro','flow','verdict'].forEach(function(n) {
+    var s = g('screen-' + n);
+    if (s) s.classList.remove('active');
   });
-  localStorage.setItem('decision_history', JSON.stringify(history.slice(0, 10)));
+  var t = g('screen-' + name);
+  if (t) t.classList.add('active');
 }
 
-function loadHistory() {
-  return JSON.parse(localStorage.getItem('decision_history') || '[]');
-}
-
-// ════════════════════════════════════════════════════════
-// SCREEN SWITCHING
-// ════════════════════════════════════════════════════════
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  const el = document.getElementById('screen-' + id);
-  el.classList.add('active');
-  el.classList.add('screen-enter');
-  setTimeout(() => el.classList.remove('screen-enter'), 400);
-}
-
-// ════════════════════════════════════════════════════════
-// INTRO SCREEN
-// ════════════════════════════════════════════════════════
 function initIntro() {
-  const history = loadHistory();
-  if (history.length > 0) {
-    const wrap = document.getElementById('history-intro');
-    const list = document.getElementById('history-list-intro');
-    wrap.style.display = 'block';
-    list.innerHTML = history.slice(0, 3).map(h => `
-      <div class="history-item">
-        <div class="history-verdict-dot ${h.verdict}"></div>
-        <div class="history-thought">${escHtml(h.thought)}</div>
-        <div class="history-date">${h.date}</div>
-      </div>
-    `).join('');
+  var hist = loadHist();
+  if (hist.length) {
+    var block = g('hist-block');
+    var list = g('hist-list');
+    if (block) block.style.display = 'block';
+    if (list) {
+      list.innerHTML = '';
+      var shown = hist.slice(0, 3);
+      for (var i = 0; i < shown.length; i++) {
+        var h = shown[i];
+        var item = mk('div','h-item');
+        var dot = mk('div','h-dot ' + h.verdict);
+        var txt = mk('div','h-text', h.thought);
+        var date = mk('div','h-date', h.date);
+        item.appendChild(dot);
+        item.appendChild(txt);
+        item.appendChild(date);
+        list.appendChild(item);
+      }
+    }
   }
   showScreen('intro');
 }
 
 function startNew() {
-  session = {
-    thought: '', emotion: null, readiness: null, level: null,
-    source: null, signal: null, deterioration: null,
-    costIn: null, costOut: null, reversibility: null,
-  };
-  currentStep = 0;
-  selectedValue = null;
+  reset();
+  step = 0;
   showScreen('flow');
   renderStep();
 }
 
-// ════════════════════════════════════════════════════════
-// STEP RENDERING
-// ════════════════════════════════════════════════════════
 function renderStep() {
-  const step = STEPS[currentStep];
-  const cfg = STEP_CONFIG[step.id];
-  const totalSteps = STEPS.length;
-  const stepNum = currentStep + 1;
+  var id = STEPS[step];
+  var total = STEPS.length;
+  var num = step + 1;
 
-  // Update header
-  document.getElementById('step-counter').textContent = `шаг ${stepNum} / ${totalSteps}`;
-  document.getElementById('progress-fill').style.width = `${(stepNum / totalSteps) * 100}%`;
+  var ctr = g('step-counter');
+  if (ctr) ctr.textContent = num + ' / ' + total;
+  var pf = g('prog-fill');
+  if (pf) pf.style.width = Math.round(num / total * 100) + '%';
 
-  selectedValue = null;
+  var cnt = g('step-content');
+  if (!cnt) return;
 
-  let html = '';
+  cnt.style.opacity = '0';
+  cnt.style.transform = 'translateY(10px)';
 
-  // Question block
-  html += `<div class="question-block">
-    <div class="question-label">${cfg.label}</div>
-    <div class="question-text">${cfg.question}</div>
-    ${cfg.sub ? `<div class="question-sub">${cfg.sub}</div>` : ''}
-  </div>`;
+  setTimeout(function() {
+    cnt.innerHTML = '';
 
-  // Show thought for steps after 1
-  if (currentStep > 0 && session.thought) {
-    html += `<div class="thought-display">${escHtml(session.thought)}</div>`;
-  }
+    var qb = mk('div');
+    qb.appendChild(mk('div','q-label', LABELS[id]));
+    qb.appendChild(mk('div','q-text', QS[id]));
+    if (QSUB[id]) qb.appendChild(mk('div','q-sub', QSUB[id]));
+    cnt.appendChild(qb);
 
-  // Emotion warning
-  if (step.id !== 'emotion' && step.id !== 'readiness' && step.id !== 'thought' && session.emotion === 2) {
-    html += `<div class="warning"><span class="warning-icon">⚠</span>Ты сейчас в горячем состоянии. Это учтено в расчёте.</div>`;
-  }
-  // Strategic level note
-  if (step.id === 'signal' && session.level === 2) {
-    html += `<div class="warning" style="background:#0a0f1f;border-color:#1a2a4d;color:var(--blue);">△ Стратегический уровень — порог для «делать сейчас» выше.</div>`;
-  }
+    if (step > 0 && S.thought) {
+      cnt.appendChild(mk('div','t-disp', S.thought));
+    }
 
-  // Input
-  if (step.type === 'textarea') {
-    html += `<div class="textarea-wrap">
-      <textarea id="thought-input" placeholder="Например: не знаю, стоит ли сейчас открывать второй офис…" rows="5" oninput="onThoughtInput(this)">${escHtml(session.thought)}</textarea>
-      <div class="textarea-hint">Минимум 3 слова</div>
-    </div>`;
-  } else if (step.type === 'options') {
-    html += `<div class="options" id="options-wrap">`;
-    cfg.options.forEach(opt => {
-      const isSelected = getSessionVal(step.id) === opt.val;
-      html += `<button class="option${isSelected ? ' selected' : ''}" onclick="selectOption(${JSON.stringify(opt.val)}, this)">
-        <div class="option-icon" style="${opt.color ? `color:${opt.color}` : 'color:var(--text-dim)'}">${opt.icon}</div>
-        <div class="option-body">
-          <div class="option-title">${opt.title}</div>
-          ${opt.desc ? `<div class="option-desc">${opt.desc}</div>` : ''}
-        </div>
-        <div class="option-check"></div>
-      </button>`;
-    });
-    html += `</div>`;
-    if (getSessionVal(step.id) !== null) selectedValue = getSessionVal(step.id);
-  } else if (step.type === 'grid') {
-    html += `<div class="options-grid" id="options-wrap">`;
-    cfg.grid.forEach(opt => {
-      const isSelected = session.source === opt.val;
-      html += `<button class="option-grid-item${isSelected ? ' selected' : ''}" onclick="selectOption(${JSON.stringify(opt.val)}, this)">
-        <span class="option-grid-icon">${opt.icon}</span>
-        <div class="option-grid-title">${opt.title}</div>
-      </button>`;
-    });
-    html += `</div>`;
-    if (session.source !== null) selectedValue = session.source;
-  }
+    if (id !== 'emotion' && id !== 'readiness' && id !== 'thought' && S.emotion === 2) {
+      cnt.appendChild(mk('div','warn warn-y', '\u26a0  Горячее состояние. Учтено в расчёте.'));
+    }
+    if (id === 'signal' && S.level === 2) {
+      cnt.appendChild(mk('div','warn warn-b', '\u25b3  Стратегический уровень — порог для "делать сейчас" выше.'));
+    }
 
-  // Button
-  const isFirst = step.type === 'textarea';
-  const canContinue = isFirst ? session.thought.split(' ').length >= 3 : selectedValue !== null;
-  html += `<button class="btn-primary" id="next-btn" onclick="nextStep()" ${canContinue ? '' : 'disabled'}>
-    ${currentStep === STEPS.length - 1 ? '→ Получить вердикт' : '→ Далее'}
-  </button>`;
+    var type = TYPES[id];
+    if (type === 'ta') {
+      buildTA(cnt);
+    } else if (type === 'opts') {
+      buildOpts(cnt, id);
+    } else if (type === 'grid') {
+      buildGrid(cnt);
+    }
 
-  // Animate out and in
-  const content = document.getElementById('step-content');
-  content.style.opacity = '0';
-  content.style.transform = 'translateY(8px)';
-  setTimeout(() => {
-    content.innerHTML = html;
-    content.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
-    content.style.opacity = '1';
-    content.style.transform = 'translateY(0)';
+    var canGo = (type === 'ta') ? (S.thought.trim().split(/\s+/).length >= 3) : (S[id] !== null);
+    var btn = mk('button','btn', step === STEPS.length - 1 ? '\u2192 Получить вердикт' : '\u2192 Далее');
+    btn.id = 'next-btn';
+    btn.disabled = !canGo;
+    btn.onclick = nextStep;
+    cnt.appendChild(btn);
 
-    if (step.type === 'textarea') {
-      const ta = document.getElementById('thought-input');
-      if (ta) setTimeout(() => ta.focus(), 200);
+    cnt.style.transition = 'opacity .22s ease, transform .22s ease';
+    cnt.style.opacity = '1';
+    cnt.style.transform = 'translateY(0)';
+
+    if (type === 'ta') {
+      var ta = g('thought-ta');
+      if (ta) setTimeout(function() { ta.focus(); }, 100);
     }
   }, 150);
 }
 
-function getSessionVal(stepId) {
-  const map = {
-    emotion: 'emotion', readiness: 'readiness', level: 'level',
-    signal: 'signal', deterioration: 'deterioration',
-    costIn: 'costIn', costOut: 'costOut', reversibility: 'reversibility',
+function buildTA(parent) {
+  var ta = document.createElement('textarea');
+  ta.id = 'thought-ta';
+  ta.placeholder = 'Например: не знаю, стоит ли открывать второй офис...';
+  ta.rows = 5;
+  ta.value = S.thought;
+  ta.oninput = function() {
+    S.thought = ta.value;
+    var btn = g('next-btn');
+    if (btn) btn.disabled = S.thought.trim().split(/\s+/).length < 3;
   };
-  return session[map[stepId]] ?? null;
+  parent.appendChild(ta);
+  parent.appendChild(mk('div','ta-hint','Минимум 3 слова'));
 }
 
-function onThoughtInput(el) {
-  session.thought = el.value;
-  const btn = document.getElementById('next-btn');
-  if (btn) btn.disabled = session.thought.trim().split(/\s+/).length < 3;
-}
+function buildOpts(parent, id) {
+  var list = OPTS[id];
+  if (!list) return;
+  var wrap = mk('div','opts');
+  for (var i = 0; i < list.length; i++) {
+    (function(opt) {
+      var btn = mk('button','opt' + (S[id] === opt.val ? ' sel' : ''));
+      btn.setAttribute('data-v', String(opt.val));
 
-function selectOption(val, el) {
-  selectedValue = val;
-  const step = STEPS[currentStep];
+      var ico = mk('div','opt-ico', opt.ico);
+      ico.style.color = opt.color || 'var(--txt)';
 
-  // Update session immediately
-  const map = {
-    emotion: 'emotion', readiness: 'readiness', level: 'level',
-    source: 'source', signal: 'signal', deterioration: 'deterioration',
-    costIn: 'costIn', costOut: 'costOut', reversibility: 'reversibility',
-  };
-  if (map[step.id]) session[map[step.id]] = val;
+      var body = mk('div','opt-body');
+      body.appendChild(mk('div','opt-title', opt.title));
+      if (opt.desc) body.appendChild(mk('div','opt-desc', opt.desc));
 
-  // Visual update — climb to the button in case click hit a child element
-  const targetBtn = el.closest('button') || el;
-  const wrap = document.getElementById('options-wrap');
-  if (wrap) {
-    wrap.querySelectorAll('.option, .option-grid-item').forEach(o => o.classList.remove('selected'));
-    targetBtn.classList.add('selected');
+      var radio = mk('div','opt-radio');
+      btn.appendChild(ico);
+      btn.appendChild(body);
+      btn.appendChild(radio);
+      btn.onclick = function() { pickOpt(id, opt.val, wrap); };
+      wrap.appendChild(btn);
+    })(list[i]);
   }
+  parent.appendChild(wrap);
+}
 
-  const nextBtn = document.getElementById('next-btn');
-  if (nextBtn) nextBtn.disabled = false;
+function buildGrid(parent) {
+  var wrap = mk('div','grid');
+  for (var i = 0; i < GRID.length; i++) {
+    (function(opt) {
+      var btn = mk('button','g-opt' + (S.source === opt.val ? ' sel' : ''));
+      btn.setAttribute('data-v', opt.val);
+      btn.appendChild(mk('span','g-ico', opt.ico));
+      btn.appendChild(mk('div','g-title', opt.title));
+      btn.onclick = function() { pickGrid(opt.val, wrap); };
+      wrap.appendChild(btn);
+    })(GRID[i]);
+  }
+  parent.appendChild(wrap);
+}
 
-  // Haptic
-  if (tg?.HapticFeedback) tg.HapticFeedback.selectionChanged();
+function pickOpt(id, val, wrap) {
+  S[id] = val;
+  var btns = wrap.querySelectorAll('.opt');
+  for (var i = 0; i < btns.length; i++) {
+    if (btns[i].getAttribute('data-v') === String(val)) btns[i].classList.add('sel');
+    else btns[i].classList.remove('sel');
+  }
+  var nb = g('next-btn');
+  if (nb) nb.disabled = false;
+  haptic();
+}
+
+function pickGrid(val, wrap) {
+  S.source = val;
+  var btns = wrap.querySelectorAll('.g-opt');
+  for (var i = 0; i < btns.length; i++) {
+    if (btns[i].getAttribute('data-v') === val) btns[i].classList.add('sel');
+    else btns[i].classList.remove('sel');
+  }
+  var nb = g('next-btn');
+  if (nb) nb.disabled = false;
+  haptic();
+}
+
+function haptic() {
+  if (tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
 }
 
 function nextStep() {
-  const step = STEPS[currentStep];
-
-  // Validate
-  if (step.type === 'textarea') {
-    if (session.thought.trim().split(/\s+/).length < 3) return;
-  } else {
-    if (selectedValue === null) return;
-  }
-
-  if (currentStep < STEPS.length - 1) {
-    currentStep++;
-    renderStep();
+  var id = STEPS[step];
+  var type = TYPES[id];
+  if (type === 'ta' && S.thought.trim().split(/\s+/).length < 3) return;
+  if (type !== 'ta' && S[id] === null) return;
+  if (step < STEPS.length - 1) {
+    step++;
     window.scrollTo(0, 0);
+    renderStep();
   } else {
     showVerdict();
   }
 }
 
-// ════════════════════════════════════════════════════════
-// VERDICT SCREEN
-// ════════════════════════════════════════════════════════
+function score() {
+  var sq = (SQ[S.source] || 0) / 2;
+  var sig = (S.signal * 0.5 + sq * 2 * 0.3 + S.deterioration * 0.2) / 2;
+  var eff = (S.costOut - S.costIn + 2) / 4;
+  var rev = S.reversibility / 2;
+  var act = sig * 0.5 + eff * 0.4 + rev * 0.1;
+  var lp = S.level * 0.12;
+  var ep = [0, 0.08, 0.20][S.emotion] || 0;
+  var rp = S.readiness === 0 ? 0.10 : 0;
+  var fin = Math.max(0, act - lp - ep - rp);
+  var v = null, sr = null;
+  if (S.emotion === 2 && S.level === 2 && S.signal <= 1) {
+    v = 'pause'; sr = 'горячее состояние + стратегический уровень + слабый сигнал';
+  } else if (S.reversibility === 0 && S.level === 2) {
+    v = 'plan'; sr = 'необратимое стратегическое решение';
+  } else if (fin >= 0.65) { v = 'do-now';
+  } else if (fin >= 0.35) { v = 'plan';
+  } else { v = 'noise'; }
+  return { v:v, fin:fin, sig:sig, eff:eff, act:act, lp:lp, ep:ep, rp:rp, sr:sr, ew:S.emotion >= 1 };
+}
+
+var VLBL = { 'do-now':'\u2713 Действие', 'plan':'\u25ce Гипотеза', 'noise':'\u2717 Шум', 'pause':'\u23f8 Пауза' };
+var VTXT = { 'do-now':'Делать сейчас.', 'plan':'Запланировать / проверить гипотезой.', 'noise':'Отложить. Скорее всего это шум.', 'pause':'Не принимай сейчас.' };
+var VCOL = { 'do-now':'#3dd68c', 'plan':'#f5c542', 'noise':'#f56565', 'pause':'#5b9cf6' };
+
+function nextAction(r) {
+  if (r.v === 'pause') return 'Вернись к этому завтра — в нынешнем состоянии решение будет хуже.';
+  if (r.v === 'do-now') {
+    var acts = ['Поставь задачу в трекер с дедлайном на эту неделю.',
+                'Запусти минимальный эксперимент за 1–2 недели.',
+                'Назначь встречу команды для согласования направления.'];
+    return acts[S.level] || acts[0];
+  }
+  if (r.v === 'plan') {
+    if (r.sr && r.sr.indexOf('необратим') >= 0) return 'Проведи анализ рисков и получи второе мнение до действия.';
+    if (S.emotion === 2) return 'Вернись к этому завтра в спокойном состоянии.';
+    if (S.signal <= 1) return 'Собери 3 подтверждения из разных источников, потом решай.';
+    return 'Запиши как гипотезу и проверь через 2 недели с конкретным критерием.';
+  }
+  return S.signal === 0 ? 'Архивируй. Если вернётся сама — значит важна.' : 'Закрой. Если вернётся сама — значит важна.';
+}
+
 function showVerdict() {
-  const result = computeScore(session);
-  const score = result.finalScore;
-  const verdict = result.verdict;
-  const nextAction = getNextAction(verdict, session, result.specialReason);
-  const scorePercent = Math.round(score * 100);
+  var r = score();
+  var pct = Math.round(r.fin * 100);
+  var na = nextAction(r);
+  saveHist(S.thought, r.v, r.fin);
 
-  saveToHistory(session.thought, verdict, score);
+  var wrap = g('verd-content');
+  if (!wrap) return;
+  wrap.innerHTML = '';
 
-  // Ring SVG
-  const circumference = 2 * Math.PI * 20;
-  const dashArray = `${score * circumference} ${circumference}`;
-  const ringColor = { 'do-now': '#4ade80', 'plan': '#fbbf24', 'noise': '#f87171', 'pause': '#60a5fa' }[verdict];
+  wrap.appendChild(mk('div','v-t-lbl','Анализ завершён'));
+  wrap.appendChild(mk('div','v-t-txt', S.thought));
 
-  // Factors
-  const factors = [];
-  if (result.levelPenalty > 0) factors.push(`Стратегический уровень: −${Math.round(result.levelPenalty*100)}% к порогу`);
-  if (result.emotionPenalty > 0) factors.push(`Эмоциональный фон: −${Math.round(result.emotionPenalty*100)}% к уверенности`);
-  if (result.readinessPenalty > 0) factors.push(`Не готов к крупным решениям: −10%`);
-  if (result.specialReason) factors.push(`Правило: ${result.specialReason}`);
+  var card = mk('div','v-card');
+  card.appendChild(mk('div','v-badge ' + r.v, VLBL[r.v] || r.v));
 
-  const html = `
-    <div class="verdict-header">
-      <div class="verdict-label">Анализ завершён</div>
-      <div class="verdict-thought">${escHtml(session.thought)}</div>
-    </div>
+  var srow = mk('div','v-srow');
+  var rw = mk('div','v-ring');
+  var col = VCOL[r.v] || '#888';
+  var circ = 2 * Math.PI * 22;
+  var dash = (r.fin * circ).toFixed(1) + ' ' + circ.toFixed(1);
 
-    <div class="verdict-card">
-      <div class="verdict-badge ${verdict}">${getVerdictBadge(verdict)}</div>
+  var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('width','68'); svg.setAttribute('height','68'); svg.setAttribute('viewBox','0 0 68 68');
+  svg.style.transform = 'rotate(-90deg)';
+  var c1 = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  c1.setAttribute('cx','34'); c1.setAttribute('cy','34'); c1.setAttribute('r','22');
+  c1.setAttribute('fill','none'); c1.setAttribute('stroke','#1a1a1f'); c1.setAttribute('stroke-width','4');
+  var c2 = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  c2.setAttribute('cx','34'); c2.setAttribute('cy','34'); c2.setAttribute('r','22');
+  c2.setAttribute('fill','none'); c2.setAttribute('stroke', col); c2.setAttribute('stroke-width','4');
+  c2.setAttribute('stroke-dasharray', dash); c2.setAttribute('stroke-linecap','round');
+  svg.appendChild(c1); svg.appendChild(c2);
+  rw.appendChild(svg);
+  rw.appendChild(mk('div','v-ring-num', String(pct)));
 
-      <div class="score-ring-wrap">
-        <div class="score-ring">
-          <svg width="56" height="56" viewBox="0 0 56 56">
-            <circle cx="28" cy="28" r="20" fill="none" stroke="var(--surface-2)" stroke-width="3"/>
-            <circle cx="28" cy="28" r="20" fill="none" stroke="${ringColor}" stroke-width="3"
-              stroke-dasharray="${dashArray}" stroke-linecap="round"
-              style="transition:stroke-dasharray 0.8s cubic-bezier(0.4,0,0.2,1)"/>
-          </svg>
-          <div class="score-ring-num">${scorePercent}</div>
-        </div>
-        <div class="score-ring-label">
-          Score ${scorePercent}/100<br>
-          <span style="color:var(--text-muted);font-size:11px;">порог действия: 65</span>
-        </div>
-      </div>
+  var si = mk('div','v-sinfo');
+  si.appendChild(mk('div','v-sinfo-label', 'Score ' + pct + ' / 100'));
+  si.appendChild(mk('div','v-sinfo-sub', 'порог действия: 65'));
 
-      <div class="verdict-main">${getVerdictText(verdict)}</div>
+  srow.appendChild(rw); srow.appendChild(si);
+  card.appendChild(srow);
+  card.appendChild(mk('div','v-main', VTXT[r.v] || r.v));
 
-      ${result.emotionWarning && verdict !== 'pause' ? `
-        <div style="background:#1a1000;border:1px solid #3a2500;border-radius:4px;padding:10px 12px;margin-bottom:16px;font-family:var(--sans);font-size:13px;color:#fbbf24;line-height:1.4;">
-          ⚠ Ты сейчас немного заряжен. Учти это.
-        </div>` : ''}
+  if (r.ew && r.v !== 'pause') {
+    var ew = mk('div','warn warn-y', '\u26a0  Ты сейчас немного заряжен. Учти это.');
+    ew.style.marginBottom = '16px';
+    card.appendChild(ew);
+  }
 
-      <div class="verdict-next">
-        <div class="verdict-next-label">Следующий шаг</div>
-        <div class="verdict-next-text">${nextAction}</div>
-      </div>
-    </div>
+  card.appendChild(mk('div','v-nl','Следующий шаг'));
+  card.appendChild(mk('div','v-nt', na));
+  wrap.appendChild(card);
 
-    <div class="breakdown">
-      <div class="breakdown-title">Что повлияло</div>
-      <div class="breakdown-rows">
-        <div class="breakdown-row">
-          <div class="breakdown-name">Сила сигнала</div>
-          <div class="breakdown-bar-track">
-            <div class="breakdown-bar-fill" style="width:${Math.round(result.signalScore*100)}%"></div>
-          </div>
-          <div class="breakdown-val">${Math.round(result.signalScore*100)}%</div>
-        </div>
-        <div class="breakdown-row">
-          <div class="breakdown-name">Б-я vs вход</div>
-          <div class="breakdown-bar-track">
-            <div class="breakdown-bar-fill" style="width:${Math.round(result.effortRatio*100)}%"></div>
-          </div>
-          <div class="breakdown-val">${Math.round(result.effortRatio*100)}%</div>
-        </div>
-        <div class="breakdown-row">
-          <div class="breakdown-name">Итог</div>
-          <div class="breakdown-bar-track">
-            <div class="breakdown-bar-fill" style="width:${scorePercent}%;background:${ringColor}"></div>
-          </div>
-          <div class="breakdown-val">${scorePercent}%</div>
-        </div>
-      </div>
-      ${factors.length > 0 ? `
-        <div class="factors">
-          ${factors.map(f => `<div class="factor"><span class="factor-dot">—</span><span>${f}</span></div>`).join('')}
-        </div>` : ''}
-    </div>
+  wrap.appendChild(mk('div','bd-title','Что повлияло'));
+  addBar(wrap, 'Сила сигнала', r.sig, '');
+  addBar(wrap, 'Б-я vs вход', r.eff, '');
+  addBar(wrap, 'Итог', r.fin, col);
 
-    <div class="verdict-actions">
-      <button class="btn-primary" style="opacity:1;animation:none;" onclick="startNew()">→ Новая мысль</button>
-      <button class="btn-outline" onclick="initIntro()">← На главную</button>
-    </div>
-  `;
+  var factors = [];
+  if (r.lp > 0) factors.push('Стратегический уровень: -' + Math.round(r.lp * 100) + '%');
+  if (r.ep > 0) factors.push('Эмоциональный фон: -' + Math.round(r.ep * 100) + '%');
+  if (r.rp > 0) factors.push('Не готов к решениям: -10%');
+  if (r.sr) factors.push('Правило: ' + r.sr);
+  for (var i = 0; i < factors.length; i++) {
+    var fr = mk('div','f-row');
+    fr.appendChild(mk('span','f-dash','—'));
+    fr.appendChild(mk('span','',factors[i]));
+    wrap.appendChild(fr);
+  }
 
-  document.getElementById('verdict-content').innerHTML = html;
+  var acts = mk('div','v-actions');
+  var b1 = mk('button','btn','\u2192 Новая мысль');
+  b1.onclick = startNew;
+  var b2 = mk('button','btn-out','\u2190 На главную');
+  b2.onclick = initIntro;
+  acts.appendChild(b1); acts.appendChild(b2);
+  wrap.appendChild(acts);
+
   showScreen('verdict');
   window.scrollTo(0, 0);
-
-  if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+  if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
 }
 
-// ════════════════════════════════════════════════════════
-// UTILS
-// ════════════════════════════════════════════════════════
-function escHtml(str) {
-  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function addBar(parent, label, val, color) {
+  var row = mk('div','br-row');
+  row.appendChild(mk('div','br-name', label));
+  var tr = mk('div','br-track');
+  var fl = mk('div','br-fill');
+  fl.style.width = Math.round(val * 100) + '%';
+  if (color) fl.style.background = color;
+  tr.appendChild(fl);
+  row.appendChild(tr);
+  row.appendChild(mk('div','br-val', Math.round(val * 100) + '%'));
+  parent.appendChild(row);
 }
 
-// ════════════════════════════════════════════════════════
-// INIT
-// ════════════════════════════════════════════════════════
+function saveHist(thought, verdict, sc) {
+  try {
+    var h = JSON.parse(localStorage.getItem('dh') || '[]');
+    h.unshift({ thought: String(thought).slice(0,80), verdict: verdict, score: Math.round(sc*100),
+                date: new Date().toLocaleDateString('ru',{day:'numeric',month:'short'}) });
+    localStorage.setItem('dh', JSON.stringify(h.slice(0,10)));
+  } catch(e) {}
+}
+
+function loadHist() {
+  try { return JSON.parse(localStorage.getItem('dh') || '[]'); } catch(e) { return []; }
+}
+
+var introBtn = g('intro-btn');
+if (introBtn) introBtn.onclick = startNew;
+
 initIntro();
+
+})();
 </script>
 </body>
 </html>
