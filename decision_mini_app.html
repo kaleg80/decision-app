@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Decision</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --surface: #141414;
+    --surface-2: #1c1c1c;
+    --border: #2a2a2a;
+    --border-active: #404040;
+    --text: #e8e8e8;
+    --text-dim: #666;
+    --text-muted: #3a3a3a;
+    --accent: #e8e8e8;
+    --green: #4ade80;
+    --yellow: #fbbf24;
+    --red: #f87171;
+    --blue: #60a5fa;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── Layout ── */
+  #app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header ── */
+  .header {
+    padding: 20px 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    opacity: 0;
+    animation: fadeUp 0.4s ease 0.1s forwards;
+  }
+  .header-logo {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+  .header-step {
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Progress bar ── */
+  .progress-track {
+    margin: 16px 20px 0;
+    height: 2px;
+    background: var(--surface-2);
+    border-radius: 1px;
+    overflow: hidden;
+    opacity: 0;
+    animation: fadeUp 0.4s ease 0.15s forwards;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--text-dim);
+    border-radius: 1px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ── Main content ── */
+  .content {
+    flex: 1;
+    padding: 32px 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ── Question block ── */
+  .question-block {
+    opacity: 0;
+    animation: fadeUp 0.35s ease 0.2s forwards;
+  }
+  .question-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+  .question-text {
+    font-family: var(--sans);
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1.4;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .question-sub {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--text-dim);
+    font-family: var(--sans);
+    line-height: 1.5;
+  }
+
+  /* ── Thought display ── */
+  .thought-display {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border-active);
+    padding: 14px 16px;
+    border-radius: 4px;
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    font-style: italic;
+    opacity: 0;
+    animation: fadeUp 0.35s ease 0.25s forwards;
+  }
+
+  /* ── Textarea ── */
+  .textarea-wrap {
+    opacity: 0;
+    animation: fadeUp 0.35s ease 0.25s forwards;
+  }
+  textarea {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    padding: 16px;
+    resize: none;
+    outline: none;
+    min-height: 120px;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+  textarea:focus { border-color: var(--border-active); }
+  textarea::placeholder { color: var(--text-muted); }
+  .textarea-hint {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Options ── */
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    opacity: 0;
+    animation: fadeUp 0.35s ease 0.3s forwards;
+  }
+
+  .option {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    -webkit-user-select: none;
+    user-select: none;
+    text-align: left;
+    width: 100%;
+    font-family: inherit;
+  }
+  .option:active { transform: scale(0.985); background: var(--surface-2); }
+  .option.selected {
+    border-color: var(--border-active);
+    background: var(--surface-2);
+  }
+  .option-icon {
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: 1px;
+    width: 20px;
+    text-align: center;
+  }
+  .option-body { flex: 1; }
+  .option-title {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.3;
+  }
+  .option-desc {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+  .option-check {
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .option.selected .option-check {
+    background: var(--text);
+    border-color: var(--text);
+  }
+  .option.selected .option-check::after {
+    content: '';
+    width: 6px;
+    height: 6px;
+    background: var(--bg);
+    border-radius: 50%;
+  }
+
+  /* ── Grid options (for source) ── */
+  .options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    opacity: 0;
+    animation: fadeUp 0.35s ease 0.3s forwards;
+  }
+  .option-grid-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+    -webkit-user-select: none;
+    user-select: none;
+    text-align: left;
+    width: 100%;
+    font-family: inherit;
+  }
+  .option-grid-item:active { transform: scale(0.97); }
+  .option-grid-item.selected { border-color: var(--border-active); background: var(--surface-2); }
+  .option-grid-icon { font-size: 18px; display: block; margin-bottom: 6px; }
+  .option-grid-title {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.3;
+  }
+
+  /* ── Primary button ── */
+  .btn-primary {
+    width: 100%;
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    border-radius: 4px;
+    padding: 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    -webkit-user-select: none;
+    user-select: none;
+    opacity: 0;
+    animation: fadeUp 0.35s ease 0.4s forwards;
+  }
+  .btn-primary:disabled { opacity: 0.25; cursor: not-allowed; }
+  .btn-primary:not(:disabled):active { transform: scale(0.98); opacity: 0.9; }
+
+  /* ── Warning banner ── */
+  .warning {
+    background: #1a1400;
+    border: 1px solid #3d2e00;
+    border-radius: 4px;
+    padding: 12px 14px;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--yellow);
+    line-height: 1.5;
+    opacity: 0;
+    animation: fadeUp 0.35s ease 0.28s forwards;
+  }
+  .warning-icon { margin-right: 6px; }
+
+  /* ── Verdict screen ── */
+  .verdict-screen {
+    padding: 32px 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: 100vh;
+  }
+
+  .verdict-header {
+    opacity: 0;
+    animation: fadeUp 0.4s ease 0.05s forwards;
+  }
+  .verdict-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .verdict-thought {
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--text-dim);
+    font-style: italic;
+    line-height: 1.5;
+    padding-left: 12px;
+    border-left: 2px solid var(--border);
+  }
+
+  .verdict-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 24px 20px;
+    opacity: 0;
+    animation: fadeUp 0.4s ease 0.15s forwards;
+  }
+  .verdict-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 3px;
+    margin-bottom: 16px;
+  }
+  .verdict-badge.do-now { background: #0a1f0a; color: var(--green); border: 1px solid #1a3d1a; }
+  .verdict-badge.plan { background: #1a1400; color: var(--yellow); border: 1px solid #3d2e00; }
+  .verdict-badge.noise { background: #1a0a0a; color: var(--red); border: 1px solid #3d1a1a; }
+  .verdict-badge.pause { background: #0a0f1f; color: var(--blue); border: 1px solid #1a2a4d; }
+
+  .verdict-main {
+    font-family: var(--sans);
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 1.3;
+    color: var(--text);
+    margin-bottom: 20px;
+    letter-spacing: -0.02em;
+  }
+
+  .verdict-next {
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+  .verdict-next-label {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .verdict-next-text {
+    font-family: var(--sans);
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  /* ── Score breakdown ── */
+  .breakdown {
+    opacity: 0;
+    animation: fadeUp 0.4s ease 0.25s forwards;
+  }
+  .breakdown-title {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .breakdown-rows { display: flex; flex-direction: column; gap: 10px; }
+  .breakdown-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .breakdown-name {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text-dim);
+    width: 120px;
+    flex-shrink: 0;
+  }
+  .breakdown-bar-track {
+    flex: 1;
+    height: 4px;
+    background: var(--surface-2);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .breakdown-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--text-dim);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .breakdown-val {
+    font-size: 11px;
+    color: var(--text-muted);
+    width: 28px;
+    text-align: right;
+  }
+
+  .factors {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .factor {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    line-height: 1.4;
+  }
+  .factor-dot { color: var(--text-muted); flex-shrink: 0; margin-top: 1px; }
+
+  /* ── Verdict actions ── */
+  .verdict-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    opacity: 0;
+    animation: fadeUp 0.4s ease 0.35s forwards;
+    padding-bottom: 24px;
+  }
+  .btn-outline {
+    width: 100%;
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s, transform 0.1s;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  .btn-outline:active { transform: scale(0.98); border-color: var(--border-active); color: var(--text); }
+
+  /* ── History ── */
+  .history-section {
+    opacity: 0;
+    animation: fadeUp 0.4s ease 0.3s forwards;
+  }
+  .history-title {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .history-list { display: flex; flex-direction: column; gap: 6px; }
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .history-verdict-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .history-verdict-dot.do-now { background: var(--green); }
+  .history-verdict-dot.plan { background: var(--yellow); }
+  .history-verdict-dot.noise { background: var(--red); }
+  .history-verdict-dot.pause { background: var(--blue); }
+  .history-thought {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--text-dim);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .history-date {
+    font-size: 10px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  /* ── Screen transitions ── */
+  .screen { display: none; }
+  .screen.active { display: flex; flex-direction: column; }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .screen-enter { animation: fadeUp 0.3s ease forwards; }
+
+  /* ── Score ring (verdict) ── */
+  .score-ring-wrap {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 4px;
+  }
+  .score-ring {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    flex-shrink: 0;
+  }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring-num {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .score-ring-label {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════════════════════════════════════════
+       SCREEN: INTRO
+  ══════════════════════════════════════════════ -->
+  <div id="screen-intro" class="screen active" style="flex-direction:column; min-height:100vh; justify-content:space-between; padding: 40px 20px 32px;">
+    <div>
+      <div style="opacity:0;animation:fadeUp 0.4s ease 0.1s forwards;">
+        <div style="font-size:10px;letter-spacing:0.25em;color:var(--text-muted);text-transform:uppercase;margin-bottom:32px;">Decision</div>
+        <div style="font-family:var(--sans);font-size:28px;font-weight:300;line-height:1.3;color:var(--text);letter-spacing:-0.02em;">
+          Убирает шум.<br>Оставляет решение.
+        </div>
+        <div style="margin-top:16px;font-family:var(--sans);font-size:15px;color:var(--text-dim);line-height:1.6;">
+          Есть мысль о бизнесе — переделать лендинг, нанять человека, сменить канал? Прогони через инструмент. Получи вердикт за 3 минуты.
+        </div>
+      </div>
+
+      <div id="history-intro" class="history-section" style="margin-top:36px;display:none;">
+        <div class="history-title">Последние решения</div>
+        <div class="history-list" id="history-list-intro"></div>
+      </div>
+    </div>
+
+    <div style="opacity:0;animation:fadeUp 0.4s ease 0.3s forwards;">
+      <button class="btn-primary" style="opacity:1;animation:none;" onclick="startNew()">
+        → Новая мысль
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SCREEN: FLOW (steps 1–9)
+  ══════════════════════════════════════════════ -->
+  <div id="screen-flow" class="screen">
+    <div id="app-inner" style="display:flex;flex-direction:column;min-height:100vh;">
+
+      <div class="header">
+        <div class="header-logo">Decision</div>
+        <div class="header-step" id="step-counter">шаг 1 / 9</div>
+      </div>
+
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill" style="width:11%"></div>
+      </div>
+
+      <div class="content" id="step-content"></div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       SCREEN: VERDICT
+  ══════════════════════════════════════════════ -->
+  <div id="screen-verdict" class="screen">
+    <div class="verdict-screen" id="verdict-content"></div>
+  </div>
+
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════
+// TELEGRAM MINI APP INIT
+// ════════════════════════════════════════════════════════
+const tg = window.Telegram?.WebApp;
+if (tg) {
+  tg.ready();
+  tg.expand();
+}
+
+// ════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════
+const SOURCE_QUALITY = {
+  data: 2, client: 2, recurring: 2,
+  competitor: 1, intuition: 0, media: 0
+};
+
+let session = {
+  thought: '',
+  emotion: null,        // 0/1/2
+  readiness: null,      // 0/1/2
+  level: null,          // 0/1/2
+  source: null,         // string
+  signal: null,         // 0/1/2
+  deterioration: null,  // 0/1/2
+  costIn: null,         // 0/1/2
+  costOut: null,        // 0/1/2
+  reversibility: null,  // 0/1/2
+};
+
+let currentStep = 0;
+let selectedValue = null;
+
+// ════════════════════════════════════════════════════════
+// STEPS DEFINITION
+// ════════════════════════════════════════════════════════
+const STEPS = [
+  { id: 'thought', type: 'textarea' },
+  { id: 'emotion', type: 'options' },
+  { id: 'readiness', type: 'options' },
+  { id: 'level', type: 'options' },
+  { id: 'source', type: 'grid' },
+  { id: 'signal', type: 'options' },
+  { id: 'deterioration', type: 'options' },
+  { id: 'costIn', type: 'options' },
+  { id: 'costOut', type: 'options' },
+  { id: 'reversibility', type: 'options' },
+];
+
+const STEP_CONFIG = {
+  thought: {
+    label: 'Мысль',
+    question: 'Что тебя зацепило?',
+    sub: 'Одним-двумя предложениями. Не что хочешь сделать — а что беспокоит или не даёт покоя.',
+  },
+  emotion: {
+    label: 'Состояние',
+    question: 'Как ты сейчас?',
+    options: [
+      { val: 0, icon: '●', color: '#4ade80', title: 'Спокойно', desc: 'Думаю трезво, без давления' },
+      { val: 1, icon: '●', color: '#fbbf24', title: 'Есть лёгкое возбуждение', desc: 'Немного заряжен, но контролирую' },
+      { val: 2, icon: '●', color: '#f87171', title: 'Сильно заряжен', desc: 'Злость, эйфория или тревога' },
+    ]
+  },
+  readiness: {
+    label: 'Готовность',
+    question: 'Ты бы сейчас подписал договор на крупную сумму?',
+    options: [
+      { val: 2, icon: '✓', title: 'Да, без сомнений', desc: '' },
+      { val: 1, icon: '~', title: 'Наверное да, с оговорками', desc: '' },
+      { val: 0, icon: '✗', title: 'Нет, подождал бы', desc: '' },
+    ]
+  },
+  level: {
+    label: 'Уровень',
+    question: 'На каком уровне эта мысль?',
+    options: [
+      { val: 0, icon: '⚙', title: 'Операционный', desc: 'Задача, процесс, исполнение' },
+      { val: 1, icon: '◎', title: 'Тактический', desc: 'Направление, канал, продукт' },
+      { val: 2, icon: '△', title: 'Стратегический', desc: 'Позиционирование, модель, структура' },
+    ]
+  },
+  source: {
+    label: 'Источник',
+    question: 'Откуда эта мысль?',
+    grid: [
+      { val: 'data', icon: '📊', title: 'Данные / метрика' },
+      { val: 'client', icon: '👤', title: 'Клиент / обратная связь' },
+      { val: 'recurring', icon: '↻', title: 'Повторяющаяся проблема' },
+      { val: 'competitor', icon: '◈', title: 'Конкурент / рынок' },
+      { val: 'intuition', icon: '◯', title: 'Интуиция / ощущение' },
+      { val: 'media', icon: '◻', title: 'Разговор / статья / пост' },
+    ]
+  },
+  signal: {
+    label: 'Сигнал',
+    question: 'Есть подтверждения, что это реальная проблема?',
+    options: [
+      { val: 2, icon: '✓', title: 'Да', desc: 'Факты, цифры, несколько случаев' },
+      { val: 1, icon: '~', title: 'Частично', desc: 'Что-то есть, но слабо' },
+      { val: 0, icon: '✗', title: 'Нет', desc: 'Пока только ощущение' },
+    ]
+  },
+  deterioration: {
+    label: 'Динамика',
+    question: 'Если не делать — станет хуже?',
+    options: [
+      { val: 2, icon: '↑', title: 'Да, проблема нарастает', desc: '' },
+      { val: 1, icon: '→', title: 'Останется как есть', desc: '' },
+      { val: 0, icon: '↓', title: 'Скорее нет', desc: '' },
+    ]
+  },
+  costIn: {
+    label: 'Цена входа',
+    question: 'Цена внедрения — деньги, время, фокус?',
+    options: [
+      { val: 0, icon: '●', color: '#4ade80', title: 'Низкая', desc: 'Быстро, дёшево, не отвлекает команду' },
+      { val: 1, icon: '●', color: '#fbbf24', title: 'Средняя', desc: 'Требует усилий, но подъёмно' },
+      { val: 2, icon: '●', color: '#f87171', title: 'Высокая', desc: 'Дорого, долго, нагрузит команду' },
+    ]
+  },
+  costOut: {
+    label: 'Цена бездействия',
+    question: 'Что теряешь, если не делать?',
+    options: [
+      { val: 2, icon: '●', color: '#f87171', title: 'Высокая потеря', desc: 'Деньги, клиенты, возможности уходят' },
+      { val: 1, icon: '●', color: '#fbbf24', title: 'Средняя', desc: 'Есть потери, но терпимо' },
+      { val: 0, icon: '●', color: '#4ade80', title: 'Низкая', desc: 'Ничего страшного не случится' },
+    ]
+  },
+  reversibility: {
+    label: 'Обратимость',
+    question: 'Если сделать и ошибиться — можно откатить?',
+    options: [
+      { val: 2, icon: '✓', title: 'Да, легко и дёшево', desc: '' },
+      { val: 1, icon: '~', title: 'Частично, с потерями', desc: '' },
+      { val: 0, icon: '✗', title: 'Нет — необратимо', desc: '' },
+    ]
+  },
+};
+
+// ════════════════════════════════════════════════════════
+// SCORING
+// ════════════════════════════════════════════════════════
+function computeScore(s) {
+  const sq = (SOURCE_QUALITY[s.source] || 0) / 2.0;
+  const signalScore = (s.signal * 0.5 + sq * 2 * 0.3 + s.deterioration * 0.2) / 2.0;
+  const effortRatio = (s.costOut - s.costIn + 2) / 4.0;
+  const revFactor = s.reversibility / 2.0;
+  const actionScore = signalScore * 0.50 + effortRatio * 0.40 + revFactor * 0.10;
+
+  const levelPenalty = s.level * 0.12;
+  const emotionPenalty = [0, 0.08, 0.20][s.emotion];
+  const readinessPenalty = s.readiness === 0 ? 0.10 : 0;
+
+  const finalScore = Math.max(0, actionScore - levelPenalty - emotionPenalty - readinessPenalty);
+
+  // Special rules
+  let specialVerdict = null;
+  let specialReason = null;
+
+  if (s.emotion === 2 && s.level === 2 && s.signal <= 1) {
+    specialVerdict = 'pause';
+    specialReason = 'горячее состояние + стратегический уровень + слабый сигнал';
+  } else if (s.reversibility === 0 && s.level === 2) {
+    specialVerdict = 'plan';
+    specialReason = 'необратимое стратегическое решение';
+  }
+
+  let verdict;
+  if (specialVerdict) verdict = specialVerdict;
+  else if (finalScore >= 0.65) verdict = 'do-now';
+  else if (finalScore >= 0.35) verdict = 'plan';
+  else verdict = 'noise';
+
+  return {
+    verdict,
+    finalScore,
+    signalScore,
+    effortRatio,
+    actionScore,
+    levelPenalty,
+    emotionPenalty,
+    readinessPenalty,
+    specialReason,
+    emotionWarning: s.emotion >= 1,
+  };
+}
+
+function getVerdictText(verdict) {
+  return {
+    'do-now': 'Делать сейчас',
+    'plan': 'Запланировать\u00A0/ проверить гипотезой',
+    'noise': 'Отложить — скорее всего это шум',
+    'pause': 'Не принимай сейчас',
+  }[verdict];
+}
+
+function getVerdictBadge(verdict) {
+  return {
+    'do-now': '✓ Действие',
+    'plan': '◎ Гипотеза',
+    'noise': '✗ Шум',
+    'pause': '⏸ Пауза',
+  }[verdict];
+}
+
+function getNextAction(verdict, s, specialReason) {
+  if (verdict === 'pause') return 'Вернись к этому завтра — в нынешнем состоянии решение будет хуже.';
+  if (verdict === 'do-now') {
+    return ['Поставь задачу в трекер с дедлайном на эту неделю.',
+            'Запусти минимальный эксперимент за 1–2 недели.',
+            'Назначь встречу команды для согласования направления.'][s.level];
+  }
+  if (verdict === 'plan') {
+    if (specialReason && specialReason.includes('необратим')) return 'Проведи анализ рисков и получи второе мнение до действия.';
+    if (s.emotion === 2) return 'Вернись к этому завтра в спокойном состоянии.';
+    if (s.signal <= 1) return 'Собери 3 подтверждения из разных источников, потом решай.';
+    return 'Запиши как гипотезу и проверь через 2 недели с конкретным критерием.';
+  }
+  if (s.signal === 0) return 'Архивируй. Если вернётся сама — значит важна.';
+  return 'Закрой. Если вернётся сама — значит важна.';
+}
+
+// ════════════════════════════════════════════════════════
+// HISTORY (localStorage)
+// ════════════════════════════════════════════════════════
+function saveToHistory(thought, verdict, score) {
+  const history = JSON.parse(localStorage.getItem('decision_history') || '[]');
+  history.unshift({
+    thought: thought.slice(0, 80),
+    verdict,
+    score: Math.round(score * 100),
+    date: new Date().toLocaleDateString('ru', { day: 'numeric', month: 'short' }),
+  });
+  localStorage.setItem('decision_history', JSON.stringify(history.slice(0, 10)));
+}
+
+function loadHistory() {
+  return JSON.parse(localStorage.getItem('decision_history') || '[]');
+}
+
+// ════════════════════════════════════════════════════════
+// SCREEN SWITCHING
+// ════════════════════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + id);
+  el.classList.add('active');
+  el.classList.add('screen-enter');
+  setTimeout(() => el.classList.remove('screen-enter'), 400);
+}
+
+// ════════════════════════════════════════════════════════
+// INTRO SCREEN
+// ════════════════════════════════════════════════════════
+function initIntro() {
+  const history = loadHistory();
+  if (history.length > 0) {
+    const wrap = document.getElementById('history-intro');
+    const list = document.getElementById('history-list-intro');
+    wrap.style.display = 'block';
+    list.innerHTML = history.slice(0, 3).map(h => `
+      <div class="history-item">
+        <div class="history-verdict-dot ${h.verdict}"></div>
+        <div class="history-thought">${escHtml(h.thought)}</div>
+        <div class="history-date">${h.date}</div>
+      </div>
+    `).join('');
+  }
+  showScreen('intro');
+}
+
+function startNew() {
+  session = {
+    thought: '', emotion: null, readiness: null, level: null,
+    source: null, signal: null, deterioration: null,
+    costIn: null, costOut: null, reversibility: null,
+  };
+  currentStep = 0;
+  selectedValue = null;
+  showScreen('flow');
+  renderStep();
+}
+
+// ════════════════════════════════════════════════════════
+// STEP RENDERING
+// ════════════════════════════════════════════════════════
+function renderStep() {
+  const step = STEPS[currentStep];
+  const cfg = STEP_CONFIG[step.id];
+  const totalSteps = STEPS.length;
+  const stepNum = currentStep + 1;
+
+  // Update header
+  document.getElementById('step-counter').textContent = `шаг ${stepNum} / ${totalSteps}`;
+  document.getElementById('progress-fill').style.width = `${(stepNum / totalSteps) * 100}%`;
+
+  selectedValue = null;
+
+  let html = '';
+
+  // Question block
+  html += `<div class="question-block">
+    <div class="question-label">${cfg.label}</div>
+    <div class="question-text">${cfg.question}</div>
+    ${cfg.sub ? `<div class="question-sub">${cfg.sub}</div>` : ''}
+  </div>`;
+
+  // Show thought for steps after 1
+  if (currentStep > 0 && session.thought) {
+    html += `<div class="thought-display">${escHtml(session.thought)}</div>`;
+  }
+
+  // Emotion warning
+  if (step.id !== 'emotion' && step.id !== 'readiness' && step.id !== 'thought' && session.emotion === 2) {
+    html += `<div class="warning"><span class="warning-icon">⚠</span>Ты сейчас в горячем состоянии. Это учтено в расчёте.</div>`;
+  }
+  // Strategic level note
+  if (step.id === 'signal' && session.level === 2) {
+    html += `<div class="warning" style="background:#0a0f1f;border-color:#1a2a4d;color:var(--blue);">△ Стратегический уровень — порог для «делать сейчас» выше.</div>`;
+  }
+
+  // Input
+  if (step.type === 'textarea') {
+    html += `<div class="textarea-wrap">
+      <textarea id="thought-input" placeholder="Например: не знаю, стоит ли сейчас открывать второй офис…" rows="5" oninput="onThoughtInput(this)">${escHtml(session.thought)}</textarea>
+      <div class="textarea-hint">Минимум 3 слова</div>
+    </div>`;
+  } else if (step.type === 'options') {
+    html += `<div class="options" id="options-wrap">`;
+    cfg.options.forEach(opt => {
+      const isSelected = getSessionVal(step.id) === opt.val;
+      html += `<button class="option${isSelected ? ' selected' : ''}" onclick="selectOption(${JSON.stringify(opt.val)}, this)">
+        <div class="option-icon" style="${opt.color ? `color:${opt.color}` : 'color:var(--text-dim)'}">${opt.icon}</div>
+        <div class="option-body">
+          <div class="option-title">${opt.title}</div>
+          ${opt.desc ? `<div class="option-desc">${opt.desc}</div>` : ''}
+        </div>
+        <div class="option-check"></div>
+      </button>`;
+    });
+    html += `</div>`;
+    if (getSessionVal(step.id) !== null) selectedValue = getSessionVal(step.id);
+  } else if (step.type === 'grid') {
+    html += `<div class="options-grid" id="options-wrap">`;
+    cfg.grid.forEach(opt => {
+      const isSelected = session.source === opt.val;
+      html += `<button class="option-grid-item${isSelected ? ' selected' : ''}" onclick="selectOption(${JSON.stringify(opt.val)}, this)">
+        <span class="option-grid-icon">${opt.icon}</span>
+        <div class="option-grid-title">${opt.title}</div>
+      </button>`;
+    });
+    html += `</div>`;
+    if (session.source !== null) selectedValue = session.source;
+  }
+
+  // Button
+  const isFirst = step.type === 'textarea';
+  const canContinue = isFirst ? session.thought.split(' ').length >= 3 : selectedValue !== null;
+  html += `<button class="btn-primary" id="next-btn" onclick="nextStep()" ${canContinue ? '' : 'disabled'}>
+    ${currentStep === STEPS.length - 1 ? '→ Получить вердикт' : '→ Далее'}
+  </button>`;
+
+  // Animate out and in
+  const content = document.getElementById('step-content');
+  content.style.opacity = '0';
+  content.style.transform = 'translateY(8px)';
+  setTimeout(() => {
+    content.innerHTML = html;
+    content.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+    content.style.opacity = '1';
+    content.style.transform = 'translateY(0)';
+
+    if (step.type === 'textarea') {
+      const ta = document.getElementById('thought-input');
+      if (ta) setTimeout(() => ta.focus(), 200);
+    }
+  }, 150);
+}
+
+function getSessionVal(stepId) {
+  const map = {
+    emotion: 'emotion', readiness: 'readiness', level: 'level',
+    signal: 'signal', deterioration: 'deterioration',
+    costIn: 'costIn', costOut: 'costOut', reversibility: 'reversibility',
+  };
+  return session[map[stepId]] ?? null;
+}
+
+function onThoughtInput(el) {
+  session.thought = el.value;
+  const btn = document.getElementById('next-btn');
+  if (btn) btn.disabled = session.thought.trim().split(/\s+/).length < 3;
+}
+
+function selectOption(val, el) {
+  selectedValue = val;
+  const step = STEPS[currentStep];
+
+  // Update session immediately
+  const map = {
+    emotion: 'emotion', readiness: 'readiness', level: 'level',
+    source: 'source', signal: 'signal', deterioration: 'deterioration',
+    costIn: 'costIn', costOut: 'costOut', reversibility: 'reversibility',
+  };
+  if (map[step.id]) session[map[step.id]] = val;
+
+  // Visual update
+  const wrap = document.getElementById('options-wrap');
+  if (wrap) {
+    wrap.querySelectorAll('.option, .option-grid-item').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+  }
+
+  const btn = document.getElementById('next-btn');
+  if (btn) btn.disabled = false;
+
+  // Haptic
+  if (tg?.HapticFeedback) tg.HapticFeedback.selectionChanged();
+}
+
+function nextStep() {
+  const step = STEPS[currentStep];
+
+  // Validate
+  if (step.type === 'textarea') {
+    if (session.thought.trim().split(/\s+/).length < 3) return;
+  } else {
+    if (selectedValue === null) return;
+  }
+
+  if (currentStep < STEPS.length - 1) {
+    currentStep++;
+    renderStep();
+    window.scrollTo(0, 0);
+  } else {
+    showVerdict();
+  }
+}
+
+// ════════════════════════════════════════════════════════
+// VERDICT SCREEN
+// ════════════════════════════════════════════════════════
+function showVerdict() {
+  const result = computeScore(session);
+  const score = result.finalScore;
+  const verdict = result.verdict;
+  const nextAction = getNextAction(verdict, session, result.specialReason);
+  const scorePercent = Math.round(score * 100);
+
+  saveToHistory(session.thought, verdict, score);
+
+  // Ring SVG
+  const circumference = 2 * Math.PI * 20;
+  const dashArray = `${score * circumference} ${circumference}`;
+  const ringColor = { 'do-now': '#4ade80', 'plan': '#fbbf24', 'noise': '#f87171', 'pause': '#60a5fa' }[verdict];
+
+  // Factors
+  const factors = [];
+  if (result.levelPenalty > 0) factors.push(`Стратегический уровень: −${Math.round(result.levelPenalty*100)}% к порогу`);
+  if (result.emotionPenalty > 0) factors.push(`Эмоциональный фон: −${Math.round(result.emotionPenalty*100)}% к уверенности`);
+  if (result.readinessPenalty > 0) factors.push(`Не готов к крупным решениям: −10%`);
+  if (result.specialReason) factors.push(`Правило: ${result.specialReason}`);
+
+  const html = `
+    <div class="verdict-header">
+      <div class="verdict-label">Анализ завершён</div>
+      <div class="verdict-thought">${escHtml(session.thought)}</div>
+    </div>
+
+    <div class="verdict-card">
+      <div class="verdict-badge ${verdict}">${getVerdictBadge(verdict)}</div>
+
+      <div class="score-ring-wrap">
+        <div class="score-ring">
+          <svg width="56" height="56" viewBox="0 0 56 56">
+            <circle cx="28" cy="28" r="20" fill="none" stroke="var(--surface-2)" stroke-width="3"/>
+            <circle cx="28" cy="28" r="20" fill="none" stroke="${ringColor}" stroke-width="3"
+              stroke-dasharray="${dashArray}" stroke-linecap="round"
+              style="transition:stroke-dasharray 0.8s cubic-bezier(0.4,0,0.2,1)"/>
+          </svg>
+          <div class="score-ring-num">${scorePercent}</div>
+        </div>
+        <div class="score-ring-label">
+          Score ${scorePercent}/100<br>
+          <span style="color:var(--text-muted);font-size:11px;">порог действия: 65</span>
+        </div>
+      </div>
+
+      <div class="verdict-main">${getVerdictText(verdict)}</div>
+
+      ${result.emotionWarning && verdict !== 'pause' ? `
+        <div style="background:#1a1000;border:1px solid #3a2500;border-radius:4px;padding:10px 12px;margin-bottom:16px;font-family:var(--sans);font-size:13px;color:#fbbf24;line-height:1.4;">
+          ⚠ Ты сейчас немного заряжен. Учти это.
+        </div>` : ''}
+
+      <div class="verdict-next">
+        <div class="verdict-next-label">Следующий шаг</div>
+        <div class="verdict-next-text">${nextAction}</div>
+      </div>
+    </div>
+
+    <div class="breakdown">
+      <div class="breakdown-title">Что повлияло</div>
+      <div class="breakdown-rows">
+        <div class="breakdown-row">
+          <div class="breakdown-name">Сила сигнала</div>
+          <div class="breakdown-bar-track">
+            <div class="breakdown-bar-fill" style="width:${Math.round(result.signalScore*100)}%"></div>
+          </div>
+          <div class="breakdown-val">${Math.round(result.signalScore*100)}%</div>
+        </div>
+        <div class="breakdown-row">
+          <div class="breakdown-name">Б-я vs вход</div>
+          <div class="breakdown-bar-track">
+            <div class="breakdown-bar-fill" style="width:${Math.round(result.effortRatio*100)}%"></div>
+          </div>
+          <div class="breakdown-val">${Math.round(result.effortRatio*100)}%</div>
+        </div>
+        <div class="breakdown-row">
+          <div class="breakdown-name">Итог</div>
+          <div class="breakdown-bar-track">
+            <div class="breakdown-bar-fill" style="width:${scorePercent}%;background:${ringColor}"></div>
+          </div>
+          <div class="breakdown-val">${scorePercent}%</div>
+        </div>
+      </div>
+      ${factors.length > 0 ? `
+        <div class="factors">
+          ${factors.map(f => `<div class="factor"><span class="factor-dot">—</span><span>${f}</span></div>`).join('')}
+        </div>` : ''}
+    </div>
+
+    <div class="verdict-actions">
+      <button class="btn-primary" style="opacity:1;animation:none;" onclick="startNew()">→ Новая мысль</button>
+      <button class="btn-outline" onclick="initIntro()">← На главную</button>
+    </div>
+  `;
+
+  document.getElementById('verdict-content').innerHTML = html;
+  showScreen('verdict');
+  window.scrollTo(0, 0);
+
+  if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+}
+
+// ════════════════════════════════════════════════════════
+// UTILS
+// ════════════════════════════════════════════════════════
+function escHtml(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+initIntro();
+</script>
+</body>
+</html>
