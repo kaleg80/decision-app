@@ -244,6 +244,9 @@
     border-radius: 50%;
   }
 
+  /* Prevent child elements from swallowing clicks on buttons */
+  .option > *, .option-grid-item > * { pointer-events: none; }
+
   /* ── Grid options (for source) ── */
   .options-grid {
     display: grid;
@@ -1047,15 +1050,16 @@ function selectOption(val, el) {
   };
   if (map[step.id]) session[map[step.id]] = val;
 
-  // Visual update
+  // Visual update — climb to the button in case click hit a child element
+  const targetBtn = el.closest('button') || el;
   const wrap = document.getElementById('options-wrap');
   if (wrap) {
     wrap.querySelectorAll('.option, .option-grid-item').forEach(o => o.classList.remove('selected'));
-    el.classList.add('selected');
+    targetBtn.classList.add('selected');
   }
 
-  const btn = document.getElementById('next-btn');
-  if (btn) btn.disabled = false;
+  const nextBtn = document.getElementById('next-btn');
+  if (nextBtn) nextBtn.disabled = false;
 
   // Haptic
   if (tg?.HapticFeedback) tg.HapticFeedback.selectionChanged();
