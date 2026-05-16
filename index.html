@@ -463,27 +463,9 @@ textarea::placeholder { color: var(--muted); }
 .v-badge.noise  { background: #1a0808; color: var(--red);    border: 1px solid #3d1a1a; }
 .v-badge.pause  { background: #080e1a; color: var(--blue);   border: 1px solid #1a2a4d; }
 
-.v-srow { display: flex; align-items: center; gap: 18px; margin-bottom: 18px; }
-.v-ring { position: relative; width: 68px; height: 68px; flex-shrink: 0; }
-.v-ring-num {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--mono);
-  font-size: 16px;
-  font-weight: 600;
-}
 .v-sinfo { flex: 1; }
-.v-sinfo-label {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--dim);
-  margin-bottom: 3px;
-}
-.v-sinfo-sub {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--muted);
-}
+.v-sinfo-label { font-family: var(--mono); font-size: 11px; color: var(--dim); margin-bottom: 3px; }
+.v-sinfo-sub { font-family: var(--mono); font-size: 10px; color: var(--muted); }
 .v-main {
   font-size: 24px;
   font-weight: 600;
@@ -564,6 +546,48 @@ textarea::placeholder { color: var(--muted); }
 .f-dash { color: var(--muted); flex-shrink: 0; }
 
 .v-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+
+/* Zone scale */
+.v-zone-wrap { margin-bottom: 20px; }
+.v-zone-bar {
+  position: relative;
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: visible;
+  margin-bottom: 8px;
+  gap: 2px;
+}
+.v-zone-seg { height: 100%; }
+.v-zone-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--bg);
+  z-index: 2;
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.2);
+}
+.v-zone-labels {
+  display: flex;
+  gap: 2px;
+}
+.v-zone-lbl {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: .05em;
+  opacity: 0.7;
+  text-align: center;
+}
+.v-zone-pos {
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  text-align: right;
+}
 </style>
 </head>
 <body>
@@ -958,34 +982,53 @@ function showVerdict() {
 
   var card = mk('div','v-card');
   card.appendChild(mk('div','v-badge ' + r.v, VLBL[r.v] || r.v));
-
-  var srow = mk('div','v-srow');
-  var rw = mk('div','v-ring');
-  var col = VCOL[r.v] || '#888';
-  var circ = 2 * Math.PI * 22;
-  var dash = (r.fin * circ).toFixed(1) + ' ' + circ.toFixed(1);
-
-  var svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-  svg.setAttribute('width','68'); svg.setAttribute('height','68'); svg.setAttribute('viewBox','0 0 68 68');
-  svg.style.transform = 'rotate(-90deg)';
-  var c1 = document.createElementNS('http://www.w3.org/2000/svg','circle');
-  c1.setAttribute('cx','34'); c1.setAttribute('cy','34'); c1.setAttribute('r','22');
-  c1.setAttribute('fill','none'); c1.setAttribute('stroke','#1a1a1f'); c1.setAttribute('stroke-width','4');
-  var c2 = document.createElementNS('http://www.w3.org/2000/svg','circle');
-  c2.setAttribute('cx','34'); c2.setAttribute('cy','34'); c2.setAttribute('r','22');
-  c2.setAttribute('fill','none'); c2.setAttribute('stroke', col); c2.setAttribute('stroke-width','4');
-  c2.setAttribute('stroke-dasharray', dash); c2.setAttribute('stroke-linecap','round');
-  svg.appendChild(c1); svg.appendChild(c2);
-  rw.appendChild(svg);
-  rw.appendChild(mk('div','v-ring-num', String(pct)));
-
-  var si = mk('div','v-sinfo');
-  si.appendChild(mk('div','v-sinfo-label', 'Score ' + pct + ' / 100'));
-  si.appendChild(mk('div','v-sinfo-sub', 'порог действия: 65'));
-
-  srow.appendChild(rw); srow.appendChild(si);
-  card.appendChild(srow);
   card.appendChild(mk('div','v-main', VTXT[r.v] || r.v));
+
+  // Zone scale — replaces confusing numeric ring
+  var col = VCOL[r.v] || '#888';
+  var zoneWrap = mk('div','v-zone-wrap');
+
+  // Three zones
+  var zones = [
+    { label:'Шум',       color:'#f56565', from:0,    to:0.35 },
+    { label:'Гипотеза',  color:'#f5c542', from:0.35, to:0.65 },
+    { label:'Действие',  color:'#3dd68c', from:0.65, to:1.0  }
+  ];
+  var barRow = mk('div','v-zone-bar');
+  for (var zi = 0; zi < zones.length; zi++) {
+    var z = zones[zi];
+    var seg = mk('div','v-zone-seg');
+    seg.style.background = z.color;
+    seg.style.opacity = '0.25';
+    seg.style.flex = String(Math.round((z.to - z.from) * 100));
+    if (zi === 0) seg.style.borderRadius = '3px 0 0 3px';
+    if (zi === zones.length - 1) seg.style.borderRadius = '0 3px 3px 0';
+    barRow.appendChild(seg);
+  }
+  // Marker position
+  var markerPct = Math.round(r.fin * 100);
+  var marker = mk('div','v-zone-marker');
+  marker.style.left = Math.min(Math.max(markerPct, 2), 97) + '%';
+  marker.style.background = col;
+  barRow.appendChild(marker);
+  zoneWrap.appendChild(barRow);
+
+  // Zone labels row
+  var labRow = mk('div','v-zone-labels');
+  for (var zj = 0; zj < zones.length; zj++) {
+    var lbl = mk('div','v-zone-lbl', zones[zj].label);
+    lbl.style.color = zones[zj].color;
+    lbl.style.flex = String(Math.round((zones[zj].to - zones[zj].from) * 100));
+    labRow.appendChild(lbl);
+  }
+  zoneWrap.appendChild(labRow);
+
+  // Position label
+  var posLabel = mk('div','v-zone-pos');
+  posLabel.textContent = 'Позиция: ' + markerPct + ' из 100';
+  zoneWrap.appendChild(posLabel);
+
+  card.appendChild(zoneWrap);
 
   if (r.ew && r.v !== 'pause') {
     var ew = mk('div','warn warn-y', '\u26a0  Ты сейчас немного заряжен. Учти это.');
@@ -999,7 +1042,7 @@ function showVerdict() {
 
   wrap.appendChild(mk('div','bd-title','Что повлияло'));
   addBar(wrap, 'Сила сигнала', r.sig, '');
-  addBar(wrap, 'Б-я vs вход', r.eff, '');
+  addBar(wrap, 'Выгода vs затраты', r.eff, '');
   addBar(wrap, 'Итог', r.fin, col);
 
   var factors = [];
